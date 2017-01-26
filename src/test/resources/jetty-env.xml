@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configure class="org.eclipse.jetty.webapp.WebAppContext">
-    <New id="jdbc/irma_cloud" class="org.eclipse.jetty.plus.jndi.Resource">
+    <New id="jdbc/irma_keyshare" class="org.eclipse.jetty.plus.jndi.Resource">
         <Arg></Arg>
-        <Arg>jdbc/irma_cloud</Arg>
+        <Arg>jdbc/irma_keyshare</Arg>
         <Arg>
             <New class="org.apache.commons.dbcp.BasicDataSource">
-                <!--<Set name="url">jdbc:h2:mem:irma_cloud;USER=sa;INIT=RUNSCRIPT FROM 'src/main/resources/database.sql'</Set>-->
-                <Set name="url">jdbc:h2:~/irma_cloud;USER=sa;INIT=RUNSCRIPT FROM 'src/main/resources/database.sql'</Set>
+                <!--<Set name="url">jdbc:h2:mem:irma_keyshare;USER=sa;INIT=RUNSCRIPT FROM 'src/main/resources/database.sql'</Set>-->
+                <Set name="url">jdbc:h2:~/irma_keyshare;USER=sa;INIT=RUNSCRIPT FROM 'src/main/resources/database.sql'</Set>
                 <Set name="driverClassName">org.h2.Driver</Set>
                 <Set name="username">sa</Set>
                 <Set name="password"></Set>

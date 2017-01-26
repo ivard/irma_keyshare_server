@@ -100,7 +100,7 @@ public class KeyshareApplication extends ResourceConfig {
     public static void openDatabase() {
         if(!Base.hasConnection()) {
             logger.warn("Reopening database connection!!!");
-            Base.open("java:comp/env/jdbc/irma_cloud");
+            Base.open("java:comp/env/jdbc/irma_keyshare");
         }
     }
     
