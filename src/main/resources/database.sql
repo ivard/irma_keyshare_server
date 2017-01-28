@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users
     pin varchar(32),
     pinCounter int,
     key varchar(256),
-    publicKey varchar(256),
+    publicKey varchar(4096),
     enrolled boolean,
     enabled boolean
 );
