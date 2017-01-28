@@ -12,11 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 @SuppressWarnings({"unused"})
 public class KeyshareConfiguration {
@@ -26,6 +25,9 @@ public class KeyshareConfiguration {
 	private static KeyshareConfiguration instance;
 
 	private String server_name = "IRMATestCloud";
+
+	private String jwt_privatekey = "sk.der";
+	private String jwt_publickey = "pk.der";
 
 	private int pinExpiry = 900; // 15 minutes
 
@@ -67,6 +69,32 @@ public class KeyshareConfiguration {
 		this.pinExpiry = pinExpiry;
 	}
 
+	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {
+		try {
+			if (bytes == null || bytes.length == 0)
+				throw new KeyManagementException("Could not read public key");
+
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+
+			return KeyFactory.getInstance("RSA").generatePublic(spec);
+		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
+			throw new KeyManagementException(e);
+		}
+	}
+
+	public static PrivateKey parsePrivateKey(byte[] bytes) throws KeyManagementException {
+		try {
+			if (bytes == null || bytes.length == 0)
+				throw new KeyManagementException("Could not read private key");
+
+			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+
+			return KeyFactory.getInstance("RSA").generatePrivate(spec);
+		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
+			throw new KeyManagementException(e);
+		}
+	}
+
 	public static byte[] getResource(String filename) throws IOException {
 		URL url = KeyshareConfiguration.class.getClassLoader().getResource(filename);
 		if (url == null)
@@ -99,19 +127,11 @@ public class KeyshareConfiguration {
 
 	public PrivateKey getJwtPrivateKey() {
 		if (jwtPrivateKey == null) {
-			KeyPairGenerator kpg;
-
 			try {
-				kpg = KeyPairGenerator.getInstance("RSA");
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-				return null;
+				jwtPrivateKey = parsePrivateKey(getResource(jwt_privatekey));
+			} catch (KeyManagementException|IOException e) {
+				throw new RuntimeException(e);
 			}
-
-			kpg.initialize(4096);
-			KeyPair kp = kpg.genKeyPair();
-			jwtPrivateKey = kp.getPrivate();
-			jwtPublicKey = kp.getPublic();
 		}
 
 		return jwtPrivateKey;
@@ -125,9 +145,14 @@ public class KeyshareConfiguration {
 		this.server_name = server_name;
 	}
 
+
 	public PublicKey getJwtPublicKey() {
 		if (jwtPublicKey == null) {
-			getJwtPrivateKey();
+			try {
+				jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
+			} catch (KeyManagementException|IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		return jwtPublicKey;
