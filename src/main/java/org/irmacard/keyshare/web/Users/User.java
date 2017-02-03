@@ -36,7 +36,7 @@ public class User extends Model {
 	public static final String USERNAME_FIELD = "username";
 	public static final String PASSWORD_FIELD = "password";
 	public static final String PIN_FIELD = "pin";
-	public static final String KEY_FIELD = "key";
+	public static final String KEYSHARE_FIELD = "keyshare";
 	public static final String PUBLICKEY_FIELD = "publickey";
 
 	public static final String ENROLLED_FIELD = "enrolled";
@@ -49,7 +49,7 @@ public class User extends Model {
 		setString(PASSWORD_FIELD, password);
 		setString(PIN_FIELD, pin);
 		setInteger(PINCOUNTER_FIELD, 0);
-		setString(KEY_FIELD, secret.toString(16));
+		setString(KEYSHARE_FIELD, secret.toString(16));
 
 		setString(PUBLICKEY_FIELD, GsonUtil.getGson().toJson(publicKey));
 		this.publicKey = publicKey;
@@ -149,12 +149,12 @@ public class User extends Model {
 		return MAX_PIN_TRIES - getPinCounter();
 	}
 
-	public BigInteger getKey() {
-		return new BigInteger(getString(KEY_FIELD), 16);
+	public BigInteger getKeyshare() {
+		return new BigInteger(getString(KEYSHARE_FIELD), 16);
 	}
 
 	public ProofPCommitmentMap generateCommitments(List<PublicKeyIdentifier> pkids) throws InfoException, KeyException {
-		pbuilder = new ProofPListBuilder(pkids, getKey());
+		pbuilder = new ProofPListBuilder(pkids, getKeyshare());
 		pbuilder.generateRandomizers();
 		builders.put(getID(), pbuilder);
 		return pbuilder.calculateCommitments();

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users
     sessionToken varchar(256),
     pin varchar(32),
     pinCounter int,
-    key varchar(256),
+    keyshare varchar(256),
     publicKey varchar(4096),
     enrolled boolean,
     enabled boolean
