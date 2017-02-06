@@ -27,9 +27,7 @@ public class Users {
 		u = new User(login);
 		System.out.println("Created user: " + u);
 		u.saveIt();
-		
-		User.findAll().dump();
-		
+
 		return u;
 	}
 
@@ -55,8 +53,6 @@ public class Users {
 		logger.warn("Created session {} for user {}", sessionToken, u.toString());
 		u.setSessionToken(sessionToken);
 		u.saveIt();
-		User.findAll().dump();
-		//Base.close();
 		return new UserSession(u.getUsername(), sessionToken, u.getID());
 	}
 

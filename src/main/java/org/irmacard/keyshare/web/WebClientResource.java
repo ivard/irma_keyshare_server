@@ -35,13 +35,6 @@ public class WebClientResource {
 		
 		return session;
 	}
-	
-	@GET
-	@Path("/users/dump")
-	public void userDump() {
-		// TODO: actually check if user is authorized
-		User.findAll().dump();
-	}
 
 	@GET
 	@Path("/users/{user_id}")

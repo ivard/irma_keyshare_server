@@ -87,24 +87,20 @@ public class KeyshareApplication extends ResourceConfig {
 
         register(WebClientResource.class);
 
-        System.out.println("Running cloud application!");
-        org.javalite.activejdbc.LogFilter.setLogExpression(".*");
+        System.out.println("Running keyshare application!");
+        org.javalite.activejdbc.LogFilter.setLogExpression("a^");
         openDatabase();
-        logger.warn("database opened");
-        logger.debug("debug test");
-        //new User(new UserLoginMessage("aap", "foobar", "1234"));
-        User.findAll().dump();
         closeDatabase();
     }
 
     public static void openDatabase() {
         if(!Base.hasConnection()) {
-            logger.warn("Reopening database connection!!!");
+            logger.warn("Opening database connection!");
             Base.open("java:comp/env/jdbc/irma_keyshare");
         }
     }
     
     public static void closeDatabase() {
-    	Base.close();
+        Base.close();
     }
 }
