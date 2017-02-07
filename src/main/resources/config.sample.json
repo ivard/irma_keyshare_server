@@ -1,0 +1,7 @@
+{
+    // A sample configuration file.
+
+    // Expiry for the pin JWT (i.e., how long a user stays authenticated
+    // without having to enter her pin)
+    "pinExpiry": 900
+}
