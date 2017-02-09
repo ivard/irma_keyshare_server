@@ -1,5 +1,7 @@
 # IRMA keyshare server
 
+** NOTE: Don't use this! This project is work in progress and not yet finished. **
+
 The IRMA keyshare server is a server that performs a share of the IRMA cryptography, so as to better protect the keys on the phone. It is meant to work together with the [card emulator app](https://github.com/credentials/irma_android_cardemu).
 
 ## Configuring the server
