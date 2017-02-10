@@ -38,6 +38,11 @@ public class KeyshareConfiguration {
 
 	private String server_url = "";
 
+	private String scheme_manager = "";
+	private String email_issuer = "";
+	private String email_credential = "";
+	private String email_attribute = "";
+
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
@@ -101,6 +106,22 @@ public class KeyshareConfiguration {
 
 	public boolean isHttpsEnabled() {
 		return server_url.startsWith("https://");
+	}
+
+	public String getSchemeManager() {
+		return scheme_manager;
+	}
+
+	public String getEmailIssuer() {
+		return email_issuer;
+	}
+
+	public String getEmailCredential() {
+		return email_credential;
+	}
+
+	public String getEmailAttribute() {
+		return email_attribute;
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

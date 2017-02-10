@@ -1,5 +1,6 @@
 package org.irmacard.keyshare.web;
 
+import org.irmacard.credentials.info.CredentialIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.web.Users.User;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 @Path("v1/web")
 public class WebClientResource {
@@ -56,6 +58,29 @@ public class WebClientResource {
 		);
 
 		return u.getAsMessage();
+	}
+
+	@GET
+	@Path("/users/{user_id}/issue_email")
+	public String getEmailIssuanceJwt(@PathParam("user_id") int userID,
+	                                  @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if(u == null) {
+			return null;
+		}
+
+		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
+
+		HashMap<String,String> attrs = new HashMap<>();
+		attrs.put(KeyshareConfiguration.getInstance().getEmailAttribute(), u.getUsername());
+
+		credentials.put(new CredentialIdentifier(
+				KeyshareConfiguration.getInstance().getSchemeManager(),
+				KeyshareConfiguration.getInstance().getEmailIssuer(),
+				KeyshareConfiguration.getInstance().getEmailCredential()
+		), attrs);
+
+		return ApiClient.getIssuingJWT(credentials);
 	}
 
 	@POST
