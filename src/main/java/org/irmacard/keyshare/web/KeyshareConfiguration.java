@@ -17,7 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class KeyshareConfiguration {
 	private static Logger logger = LoggerFactory.getLogger(KeyshareConfiguration.class);
 
@@ -37,6 +37,8 @@ public class KeyshareConfiguration {
 	private String mail_from = "";
 
 	private String server_url = "";
+
+	private String enroll_done_url = "/irma_keyshare_server/enroll_done/";
 
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
@@ -100,6 +102,10 @@ public class KeyshareConfiguration {
 			return server_url + "/" + "irma_keyshare_server/api";
 		else
 			return server_url + "irma_keyshare_server/api";
+	}
+
+	public String getEnrollDoneUrl() {
+		return enroll_done_url;
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

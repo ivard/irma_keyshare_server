@@ -104,7 +104,7 @@ public class WebClientResource {
 		user.setEnrolled(true);
 		user.saveIt();
 
-		return Response.seeOther(new URI(KeyshareConfiguration.getInstance().getApiUrl())).build();
+		return Response.seeOther(new URI(KeyshareConfiguration.getInstance().getEnrollDoneUrl())).build();
 	}
 
 	@POST
