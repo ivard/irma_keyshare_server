@@ -198,7 +198,8 @@ public class User extends Model {
 
 	public List<LogEntry> getLogs() {
 		ArrayList<LogEntry> lst = new ArrayList<>();
-		List<LogEntryRecord> records = getAll(LogEntryRecord.class);
+		List<LogEntryRecord> records = getAll(LogEntryRecord.class)
+				.orderBy(LogEntryRecord.DATE_FIELD + " desc");
 		for(LogEntryRecord entry : records) {
 			lst.add(new LogEntry(entry));
 		}
