@@ -6,11 +6,16 @@ import org.irmacard.keyshare.web.Users.LogEntry;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.UserSession;
 import org.irmacard.keyshare.web.Users.Users;
+import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.mail.internet.AddressException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 @Path("v1/web")
@@ -60,7 +65,7 @@ public class WebClientResource {
 	@POST @Path("/users/selfenroll")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public UserMessage userSelfEnroll(UserLoginMessage user) {
+	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		return userEnroll(userRegister(user).getUserID());
 	}
 
@@ -68,18 +73,38 @@ public class WebClientResource {
 	@POST
 	@Path("/users/{user_id}/enroll")
 	@Produces(MediaType.APPLICATION_JSON)
-	public UserMessage userEnroll(@PathParam("user_id") int userID) {
+	public UserMessage userEnroll(@PathParam("user_id") int userID) throws AddressException {
 		// TODO: actually check that the user is authorized
 		User u = Users.getUserForID(userID);
 		if(u == null) {
 			return null;
 		}
 
-		logger.info("Enrolled user {}", u.getUsername());
+		logger.info("Added user {}", u.getUsername());
 
-		u.setEnrolled(true);
+		EmailVerifier.verifyEmail(
+				u.getUsername(),
+				"Verify your email address",
+				"To finish enrollment to the keyshare server, please click on the link below.",
+				"v1/web/users/finishenroll"
+		);
+		u.setEnrolled(false);
 		u.saveIt();
 		return u.getAsMessage();
+	}
+
+	@GET
+	@Path("/users/finishenroll/{token}")
+	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
+		String email = EmailVerifier.getVerifiedAddress(token);
+		if (email == null)
+			return Response.status(Response.Status.NOT_FOUND).build();
+
+		User user = Users.getValidUser(email);
+		user.setEnrolled(true);
+		user.saveIt();
+
+		return Response.seeOther(new URI(KeyshareConfiguration.getInstance().getApiUrl())).build();
 	}
 
 	@POST

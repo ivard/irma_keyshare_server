@@ -93,7 +93,7 @@ public class Users {
 		}
 	}
 
-    private static String randomSessionToken() {
+    public static String randomSessionToken() {
         return new BigInteger(260, srnd).toString(32);
     }
 }

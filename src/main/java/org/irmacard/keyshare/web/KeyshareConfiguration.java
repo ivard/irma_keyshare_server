@@ -31,6 +31,13 @@ public class KeyshareConfiguration {
 
 	private int pinExpiry = 900; // 15 minutes
 
+	private String mail_user = "";
+	private String mail_password = "";
+	private String mail_host = "";
+	private String mail_from = "";
+
+	private String server_url = "";
+
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
@@ -50,8 +57,6 @@ public class KeyshareConfiguration {
 			e.printStackTrace();
 			instance = new KeyshareConfiguration();
 		}
-
-		logger.info("Cloud configuration: {}", instance);
 	}
 
 	public static KeyshareConfiguration getInstance() {
@@ -67,6 +72,34 @@ public class KeyshareConfiguration {
 
 	public void setPinExpiry(int pinExpiry) {
 		this.pinExpiry = pinExpiry;
+	}
+
+	public String getMailUser() {
+		return mail_user;
+	}
+
+	public String getMailPassword() {
+		return mail_password;
+	}
+
+	public String getMailHost() {
+		return mail_host;
+	}
+
+	public String getMailFrom() {
+		return mail_from;
+	}
+
+	public String getUrl() {
+		if (server_url.endsWith("/")) return server_url;
+		else return server_url + "/";
+	}
+
+	public String getApiUrl() {
+		if (!server_url.endsWith("/"))
+			return server_url + "/" + "irma_keyshare_server/api";
+		else
+			return server_url + "irma_keyshare_server/api";
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

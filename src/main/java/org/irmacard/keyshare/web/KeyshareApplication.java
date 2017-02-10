@@ -39,6 +39,7 @@ import org.irmacard.credentials.info.DescriptionStore;
 import org.irmacard.credentials.info.DescriptionStoreDeserializer;
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.keyshare.web.Users.User;
+import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.DatabaseRequestFilter;
 import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;
 import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
@@ -86,6 +87,8 @@ public class KeyshareApplication extends ResourceConfig {
         register(DatabaseResponseFilter.class);
 
         register(WebClientResource.class);
+
+        EmailVerifier.setupDatabaseCleanupTask();
 
         System.out.println("Running keyshare application!");
         org.javalite.activejdbc.LogFilter.setLogExpression("a^");

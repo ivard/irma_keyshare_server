@@ -22,3 +22,12 @@ CREATE TABLE IF NOT EXISTS log_entry_records
     event varchar(256),
     user_id int unsigned
 );
+
+CREATE TABLE IF NOT EXISTS email_verification_records
+(
+    id int unsigned NOT NULL auto_increment PRIMARY KEY,
+    email varchar(256) NOT NULL,
+    token varchar(64) NOT NULL,
+    timeout long NOT NULL,
+    time_created long NOT NULL
+);
