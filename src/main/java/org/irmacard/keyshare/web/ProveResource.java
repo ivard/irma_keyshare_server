@@ -1,25 +1,20 @@
 package org.irmacard.keyshare.web;
 
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-
-import io.jsonwebtoken.Jwts;
 import org.irmacard.api.common.util.GsonUtil;
-import org.irmacard.keyshare.common.IRMAHeaders;
-import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.credentials.idemix.proofs.ProofP;
 import org.irmacard.credentials.idemix.proofs.ProofPCommitmentMap;
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
 import org.irmacard.credentials.info.PublicKeyIdentifier;
+import org.irmacard.keyshare.common.IRMAHeaders;
+import org.irmacard.keyshare.web.Users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.irmacard.keyshare.web.BaseVerifier.JWT_ISSUER;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.math.BigInteger;
+import java.util.List;
 
 @Path("v1/prove")
 public class ProveResource {

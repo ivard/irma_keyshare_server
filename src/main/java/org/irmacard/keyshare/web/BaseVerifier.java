@@ -16,6 +16,8 @@ import javax.ws.rs.Path;
 import org.irmacard.api.common.exceptions.ApiError;
 import org.irmacard.api.common.exceptions.ApiException;
 import org.irmacard.api.common.util.GsonUtil;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.slf4j.Logger;
@@ -120,7 +122,7 @@ public class BaseVerifier {
 			throw new ApiException(ApiError.UNEXPECTED_REQUEST, "Cannot find user");
 		}
 
-		if(!u.isEnabled()) {
+		if(!u.isEnabled() || !u.isEnrolled()) {
 			throw new ApiException(ApiError.UNAUTHORIZED, "Token disabled");
 		}
 

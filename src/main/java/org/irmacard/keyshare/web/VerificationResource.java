@@ -1,6 +1,5 @@
 package org.irmacard.keyshare.web;
 
-import java.util.Arrays;
 import org.irmacard.keyshare.common.AuthorizationResult;
 import org.irmacard.keyshare.common.IRMAHeaders;
 import org.irmacard.keyshare.web.Users.User;
@@ -8,8 +7,12 @@ import org.irmacard.keyshare.web.Users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Arrays;
 
 public class VerificationResource extends BaseVerifier {
 	private static Logger logger = LoggerFactory.getLogger(VerificationResource.class);
@@ -28,7 +31,7 @@ public class VerificationResource extends BaseVerifier {
 
 		User u = Users.getValidUser(username);
 
-		if(!u.isEnabled()) {
+		if(!u.isEnabled() || !u.isEnrolled()) {
 			u.addLog("Authentication of IRMA token refused because of block");
 			return new AuthorizationResult(AuthorizationResult.STATUS_BLOCKED, null);
 		}
