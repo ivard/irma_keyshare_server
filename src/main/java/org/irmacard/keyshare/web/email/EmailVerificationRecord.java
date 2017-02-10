@@ -11,14 +11,17 @@ public class EmailVerificationRecord extends Model {
 	private static final String TIME_CREATED_FIELD = "time_created";
 	private static final String TIME_VERIFIED_FIELD = "time_verified";
 
+	public static final int DEFAULT_TIMEOUT = 60 * 60 * 24 * 3;
+	public static final int DEFAULT_VALIDITY = 60 * 60 * 24 * 3;
+
 	public EmailVerificationRecord() {}
 
 	public EmailVerificationRecord(String email) {
-		this(email, 60*60*24, 60*60*24);
+		this(email, DEFAULT_TIMEOUT, DEFAULT_VALIDITY);
 	}
 
 	public EmailVerificationRecord(String email, int timeout) {
-		this(email, 60*60*24, 60*60*24);
+		this(email, timeout, DEFAULT_VALIDITY);
 	}
 
 	public EmailVerificationRecord(String email, int timeout, int validity) {
@@ -36,6 +39,10 @@ public class EmailVerificationRecord extends Model {
 
 	public String getToken() {
 		return getString(TOKEN_FIELD);
+	}
+
+	public int getValidity() {
+		return getInteger(VALIDITY_FIELD);
 	}
 
 	public void setVerified() {

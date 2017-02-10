@@ -16,13 +16,35 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 import static java.util.concurrent.TimeUnit.HOURS;
+import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_TIMEOUT;
+import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_VALIDITY;
 
 public class EmailVerifier {
 	private static Logger logger = LoggerFactory.getLogger(EmailVerifier.class);
 
 	private static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-	public static void verifyEmail(String email, String subject, String body, String callback) throws AddressException {
+	public static void verifyEmail(String email,
+	                               String subject,
+	                               String body,
+	                               String callback) throws AddressException {
+		verifyEmail(email, subject, body, callback, DEFAULT_TIMEOUT, DEFAULT_VALIDITY);
+	}
+
+	public static void verifyEmail(String email,
+	                               String subject,
+	                               String body,
+	                               String callback,
+	                               int timeout) throws AddressException {
+		verifyEmail(email, subject, body, callback, timeout, DEFAULT_VALIDITY);
+	}
+
+	public static void verifyEmail(String email,
+	                               String subject,
+	                               String body,
+	                               String callback,
+	                               int timeout,
+	                               int validity) throws AddressException {
 		InternetAddress[] addresses = InternetAddress.parse(email);
 		if (addresses.length != 1)
 			throw new AddressException("Invalid amount of (comma-separated) addresses given (should be 1)");
@@ -42,7 +64,7 @@ public class EmailVerifier {
 
 		if (!callback.startsWith("/")) callback = "/" + callback;
 		if (!callback.endsWith("/")) callback += "/";
-		EmailVerificationRecord record = new EmailVerificationRecord(email, 60 * 60 * 24 * 3);
+		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
 		String url = KeyshareConfiguration.getInstance().getApiUrl() + callback + record.getToken();
 
 		try {
@@ -61,8 +83,11 @@ public class EmailVerifier {
 	public static String getVerifiedAddress(String token) {
 		// An email verification link should work only once,
 		// so we check if time_verified has been set before.
-		EmailVerificationRecord record =
-				EmailVerificationRecord.findFirst("token = ? AND time_verified IS NULL", token);
+		EmailVerificationRecord record = EmailVerificationRecord.findFirst(
+				"token = ? AND time_verified IS NULL AND time_created + timeout > ?",
+				token,
+				System.currentTimeMillis() / 1000
+		);
 		if (record == null)
 			return null;
 

@@ -93,15 +93,16 @@ public class KeyshareConfiguration {
 	}
 
 	public String getUrl() {
-		if (server_url.endsWith("/")) return server_url;
-		else return server_url + "/";
+		if (server_url.endsWith("/")) return server_url + "irma_keyshare_server";
+		else return server_url + "/irma_keyshare_server";
 	}
 
 	public String getApiUrl() {
-		if (!server_url.endsWith("/"))
-			return server_url + "/" + "irma_keyshare_server/api";
-		else
-			return server_url + "irma_keyshare_server/api";
+		return getUrl() + "/api";
+	}
+
+	public boolean isHttpsEnabled() {
+		return server_url.startsWith("https://");
 	}
 
 	public String getEnrollDoneUrl() {

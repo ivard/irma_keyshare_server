@@ -35,6 +35,7 @@ public class User extends Model {
 
 	public static final String USERNAME_FIELD = "username";
 	public static final String PASSWORD_FIELD = "password";
+	public static final String LAST_SEEN_FIELD = "lastSeen";
 	public static final String PIN_FIELD = "pin";
 	public static final String KEYSHARE_FIELD = "keyshare";
 	public static final String PUBLICKEY_FIELD = "publickey";
@@ -74,7 +75,23 @@ public class User extends Model {
 	}
 
 	void setSessionToken(String sessionToken) {
+		setSeen();
 		setString(SESSION_FIELD, sessionToken);
+	}
+
+	public void setSeen() {
+		setLong(LAST_SEEN_FIELD, System.currentTimeMillis()/1000);
+	}
+
+	public boolean isValidSession(String sessionid) {
+		String sessiontoken = getSessionToken();
+
+		boolean valid = sessiontoken != null
+				&& sessiontoken.length() > 0
+				&& sessiontoken.equals(sessionid);
+		boolean notExpired = getLong(LAST_SEEN_FIELD) + 60*10 > System.currentTimeMillis()/1000;
+
+		return valid && notExpired;
 	}
 
 	public String getUsername() {

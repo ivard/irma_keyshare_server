@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users
     username varchar(256),
     password varchar(256),
     sessionToken varchar(256),
+    lastSeen long,
     pin varchar(256),
     pinCounter int,
     keyshare varchar(256),

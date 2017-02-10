@@ -25,7 +25,7 @@ public class Users {
 		}
 
 		u = new User(login);
-		System.out.println("Created user: " + u);
+		u.setEnrolled(false);
 		u.saveIt();
 
 		return u;
@@ -56,14 +56,23 @@ public class Users {
 		return new UserSession(u.getUsername(), sessionToken, u.getID());
 	}
 
-	static public User getUser(String username) {
-		List<User> users = User.where(User.USERNAME_FIELD + " = ?", username);
+	static public void clearSessionForUser(User u) {
+		logger.warn("Removing session {} for user {}", u.getSessionToken(), u.toString());
+		u.setSessionToken("");
+		u.saveIt();
+	}
 
-		if(users.size() > 0) {
-			return users.get(0);
-		} else {
-			return null;
+	static public User getUser(String username) {
+		return User.findFirst(User.USERNAME_FIELD + " = ?", username);
+	}
+
+	static public User getLoggedInUser(int user_id, String sessionid) {
+		User u = getUserForID(user_id);
+		if (!u.isValidSession(sessionid)) {
+			logger.info("User {} presented invalid sessionid cookie", u.getUsername());
+			throw new KeyshareException(KeyshareError.USER_SESSION_INVALID);
 		}
+		return u;
 	}
 
 	/**
@@ -84,13 +93,7 @@ public class Users {
 
 	static public User getUserForID(int user_id) {
 		System.out.println("Querying for user id = " + user_id);
-		List<User> users = User.where("ID = ?", user_id);
-
-		if(users.size() > 0) {
-			return users.get(0);
-		} else {
-			return null;
-		}
+		return User.findFirst("ID = ?", user_id);
 	}
 
     public static String randomSessionToken() {
