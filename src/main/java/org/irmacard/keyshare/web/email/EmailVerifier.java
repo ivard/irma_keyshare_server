@@ -59,13 +59,24 @@ public class EmailVerifier {
 	}
 
 	public static String getVerifiedAddress(String token) {
-		EmailVerificationRecord record = EmailVerificationRecord.findFirst("token = ?", token);
+		// An email verification link should work only once,
+		// so we check if time_verified has been set before.
+		EmailVerificationRecord record =
+				EmailVerificationRecord.findFirst("token = ? AND time_verified IS NULL", token);
 		if (record == null)
 			return null;
 
-		String email = record.getEmail();
-		record.delete();
-		return email;
+		record.setVerified();
+		return record.getEmail();
+	}
+
+	public static boolean isAddressVerified(String email) {
+		return EmailVerificationRecord.count(
+				"email = ? " +
+						"AND time_verified IS NOT NULL " +
+						"AND time_verified + validity > ?",
+				email, System.currentTimeMillis()/1000
+		) > 0;
 	}
 
 	public static void setupDatabaseCleanupTask() {
@@ -73,7 +84,12 @@ public class EmailVerifier {
 			@Override public void run() {
 				logger.warn("Deleting expired email verifications");
 				KeyshareApplication.openDatabase();
-				EmailVerificationRecord.delete("time_created + timeout < ?", System.currentTimeMillis()/1000);
+				EmailVerificationRecord.delete(
+						"(time_verified IS NULL AND time_created + timeout < ?) "
+						+ "OR (time_verified IS NOT NULL AND time_verified + validity < ?)",
+						System.currentTimeMillis()/1000,
+						System.currentTimeMillis()/1000
+				);
 			}
 		};
 
