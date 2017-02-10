@@ -149,6 +149,7 @@ public class WebClientResource {
 			return Response.status(Response.Status.NOT_FOUND).build();
 
 		User user = Users.getValidUser(email);
+		user.setEnrolled(true);
 		Users.getSessionForUser(user);
 
 		return Response
