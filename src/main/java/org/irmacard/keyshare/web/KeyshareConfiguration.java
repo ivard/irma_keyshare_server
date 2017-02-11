@@ -38,8 +38,6 @@ public class KeyshareConfiguration {
 
 	private String server_url = "";
 
-	private String enroll_done_url = "/irma_keyshare_server/enroll_done/";
-
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
@@ -103,10 +101,6 @@ public class KeyshareConfiguration {
 
 	public boolean isHttpsEnabled() {
 		return server_url.startsWith("https://");
-	}
-
-	public String getEnrollDoneUrl() {
-		return enroll_done_url;
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

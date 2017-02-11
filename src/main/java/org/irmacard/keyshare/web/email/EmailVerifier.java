@@ -62,10 +62,13 @@ public class EmailVerifier {
 			}
 		});
 
-		if (!callback.startsWith("/")) callback = "/" + callback;
-		if (!callback.endsWith("/")) callback += "/";
+		if (!callback.startsWith("http://") && !callback.startsWith("https://")) {
+			if (!callback.startsWith("/")) callback = "/" + callback;
+			if (!callback.endsWith("/")) callback += "/";
+			callback = KeyshareConfiguration.getInstance().getApiUrl() + callback;
+		}
 		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
-		String url = KeyshareConfiguration.getInstance().getApiUrl() + callback + record.getToken();
+		String url = callback + record.getToken();
 
 		try {
 			Message message = new MimeMessage(session);

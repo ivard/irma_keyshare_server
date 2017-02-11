@@ -14,7 +14,6 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 @Path("v1/web")
@@ -53,14 +52,14 @@ public class WebClientResource {
 				u.getUsername(),
 				"Verify your email address",
 				"To finish enrollment to the keyshare server, please click on the link below.",
-				"v1/web/users/finishenroll"
+				KeyshareConfiguration.getInstance().getUrl() + "/#finishenroll/"
 		);
 
 		return u.getAsMessage();
 	}
 
 	@GET
-	@Path("/users/finishenroll/{token}")
+	@Path("/finishenroll/{token}")
 	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
 		String email = EmailVerifier.getVerifiedAddress(token);
 		if (email == null)
@@ -70,10 +69,7 @@ public class WebClientResource {
 		user.setEnrolled(true);
 		Users.getSessionForUser(user);
 
-		return Response
-				.seeOther(new URI(KeyshareConfiguration.getInstance().getEnrollDoneUrl()))
-				.cookie(getSessionCookie(user))
-				.build();
+		return getCookiePostResponse(user);
 	}
 
 	@POST
@@ -131,7 +127,7 @@ public class WebClientResource {
 					email,
 					"Log in on keyshare server",
 					"Click on the link below to log in on the keyshare server.",
-					"v1/web/login",
+					KeyshareConfiguration.getInstance().getUrl() + "/#login/",
 					60 * 60 // 1 hour
 			);
 		}
@@ -144,18 +140,7 @@ public class WebClientResource {
 	@GET
 	@Path("/login/{token}")
 	public Response oneTimePasswordLogin(@PathParam("token") String token) throws URISyntaxException {
-		String email = EmailVerifier.getVerifiedAddress(token);
-		if (email == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
-
-		User user = Users.getValidUser(email);
-		user.setEnrolled(true);
-		Users.getSessionForUser(user);
-
-		return Response
-				.seeOther(new URI(KeyshareConfiguration.getInstance().getUrl()))
-				.cookie(getSessionCookie(user))
-				.build();
+		return enroll(token);
 	}
 
 	@GET
