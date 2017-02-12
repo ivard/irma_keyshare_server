@@ -52,24 +52,10 @@ public class WebClientResource {
 				u.getUsername(),
 				"Verify your email address",
 				"To finish enrollment to the keyshare server, please click on the link below.",
-				KeyshareConfiguration.getInstance().getUrl() + "/#finishenroll/"
+				KeyshareConfiguration.getInstance().getUrl() + "/#enroll/"
 		);
 
 		return u.getAsMessage();
-	}
-
-	@GET
-	@Path("/finishenroll/{token}")
-	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
-		String email = EmailVerifier.getVerifiedAddress(token);
-		if (email == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
-
-		User user = Users.getValidUser(email);
-		user.setEnrolled(true);
-		Users.getSessionForUser(user);
-
-		return getCookiePostResponse(user);
 	}
 
 	@POST
@@ -114,6 +100,20 @@ public class WebClientResource {
 		logger.debug("Requested logs for user {}", u.getUsername());
 
 		return getCookiePostResponse(u.getLogs(), u);
+	}
+
+	@GET
+	@Path("/enroll/{token}")
+	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
+		String email = EmailVerifier.getVerifiedAddress(token);
+		if (email == null)
+			return Response.status(Response.Status.NOT_FOUND).build();
+
+		User user = Users.getValidUser(email);
+		user.setEnrolled(true);
+		Users.getSessionForUser(user);
+
+		return getCookiePostResponse(user);
 	}
 
 	@POST
