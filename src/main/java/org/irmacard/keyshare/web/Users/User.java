@@ -12,10 +12,13 @@ import org.irmacard.credentials.info.KeyException;
 import org.irmacard.credentials.info.PublicKeyIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
+import org.irmacard.keyshare.web.KeyshareConfiguration;
+import org.irmacard.keyshare.web.email.EmailSender;
 import org.javalite.activejdbc.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.mail.internet.AddressException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -155,6 +158,18 @@ public class User extends Model {
 				logger.warn("Pin tried too often, disabled user {}", getUsername());
 				addLog("Pin tried too often, user disabled");
 				setEnabled(false);
+				try {
+					EmailSender.send(
+							getUsername(),
+							"Your IRMA app has been blocked due to too many PIN attempts",
+							"Dear " + getUsername() + ",\n\n"
+							+ "Your IRMA app has entered an incorrect PIN too may times and has been blocked. "
+							+ "Please login on the keyshare portal to re-enable your IRMA app. The keyshare portal "
+							+ "can be found here: " + KeyshareConfiguration.getInstance().getUrl()
+					);
+				} catch (AddressException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
