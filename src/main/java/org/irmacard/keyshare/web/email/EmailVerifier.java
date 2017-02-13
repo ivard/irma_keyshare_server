@@ -2,15 +2,10 @@ package org.irmacard.keyshare.web.email;
 
 import org.irmacard.keyshare.web.KeyshareApplication;
 import org.irmacard.keyshare.web.KeyshareConfiguration;
-import org.javalite.activejdbc.Base;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.mail.*;
 import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -45,42 +40,18 @@ public class EmailVerifier {
 	                               String callback,
 	                               int timeout,
 	                               int validity) throws AddressException {
-		InternetAddress[] addresses = InternetAddress.parse(email);
-		if (addresses.length != 1)
-			throw new AddressException("Invalid amount of (comma-separated) addresses given (should be 1)");
-
-		Properties props = new Properties();
-		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.port", "587");
-		props.put("mail.smtp.host", KeyshareConfiguration.getInstance().getMailHost());
-
-		Session session = Session.getInstance(props, new Authenticator() {
-			@Override protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(KeyshareConfiguration.getInstance().getMailUser(),
-						KeyshareConfiguration.getInstance().getMailPassword());
-			}
-		});
-
+		// If the callback is relative, prepend our url to it
 		if (!callback.startsWith("http://") && !callback.startsWith("https://")) {
 			if (!callback.startsWith("/")) callback = "/" + callback;
 			if (!callback.endsWith("/")) callback += "/";
 			callback = KeyshareConfiguration.getInstance().getApiUrl() + callback;
 		}
+
 		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
 		String url = callback + record.getToken();
+		body = body + "\n\n" + url;
 
-		try {
-			Message message = new MimeMessage(session);
-			message.setFrom(new InternetAddress(KeyshareConfiguration.getInstance().getMailFrom()));
-			message.setRecipients(Message.RecipientType.TO, addresses);
-			message.setSubject(subject);
-			message.setText(body + "\n\n" + url);
-			Transport.send(message);
-			logger.info("Sent mail to {}", email);
-		} catch (MessagingException e) {
-			logger.error("Sending mail to {} failed:\n{}", email, e.getMessage());
-		}
+		EmailSender.send(email, subject, body);
 	}
 
 	public static String getVerifiedAddress(String token) {
