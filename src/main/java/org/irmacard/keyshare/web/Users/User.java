@@ -92,7 +92,9 @@ public class User extends Model {
 		boolean valid = sessiontoken != null
 				&& sessiontoken.length() > 0
 				&& sessiontoken.equals(sessionid);
-		boolean notExpired = getLong(LAST_SEEN_FIELD) + 60*10 > System.currentTimeMillis()/1000;
+		boolean notExpired = getLong(LAST_SEEN_FIELD) +
+				+ KeyshareConfiguration.getInstance().getSessionTimeout() * 60
+				> System.currentTimeMillis()/1000;
 
 		return valid && notExpired;
 	}

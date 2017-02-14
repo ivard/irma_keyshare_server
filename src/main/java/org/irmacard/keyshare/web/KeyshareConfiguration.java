@@ -43,6 +43,8 @@ public class KeyshareConfiguration {
 	private String email_credential = "";
 	private String email_attribute = "";
 
+	private int session_timeout = 30;
+
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
@@ -122,6 +124,10 @@ public class KeyshareConfiguration {
 
 	public String getEmailAttribute() {
 		return email_attribute;
+	}
+
+	public int getSessionTimeout() {
+		return session_timeout;
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

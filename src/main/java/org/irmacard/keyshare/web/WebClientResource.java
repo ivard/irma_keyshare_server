@@ -203,9 +203,11 @@ public class WebClientResource {
 
 		// TODO magic number alert
 		return new NewCookie[] {
-			new NewCookie("sessionid", u.getSessionToken(), "/", null, null, 60*60*10,
+			new NewCookie("sessionid", u.getSessionToken(), "/", null, null,
+					KeyshareConfiguration.getInstance().getSessionTimeout()*60,
 					KeyshareConfiguration.getInstance().isHttpsEnabled()),
-			new NewCookie("userid", Integer.toString(u.getID()), "/", null, null, 60*60*10,
+			new NewCookie("userid", Integer.toString(u.getID()), "/", null, null,
+					KeyshareConfiguration.getInstance().getSessionTimeout()*60,
 					KeyshareConfiguration.getInstance().isHttpsEnabled())
 		};
 	}
