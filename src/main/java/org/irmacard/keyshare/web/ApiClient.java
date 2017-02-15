@@ -1,7 +1,11 @@
 package org.irmacard.keyshare.web;
 
 import io.jsonwebtoken.Jwts;
+import org.irmacard.api.common.AttributeDisjunctionList;
+import org.irmacard.api.common.ClientRequest;
 import org.irmacard.api.common.CredentialRequest;
+import org.irmacard.api.common.disclosure.DisclosureProofRequest;
+import org.irmacard.api.common.disclosure.ServiceProviderRequest;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.api.common.issuing.IssuingRequest;
 import org.irmacard.api.common.util.GsonUtil;
@@ -17,8 +21,21 @@ import java.util.HashMap;
  */
 public class ApiClient {
 	public static String getIssuingJWT(HashMap<CredentialIdentifier, HashMap<String, String>> credentialList) {
+		IdentityProviderRequest request = getIdentityProviderRequest(credentialList);
+
 		return Jwts.builder()
-				.setPayload(getJwtClaims(credentialList))
+				.setPayload(getJwtClaims(request, "iprequest", "issue_request"))
+				.signWith(KeyshareConfiguration.getInstance().getJwtAlgorithm(),
+						KeyshareConfiguration.getInstance().getJwtPrivateKey())
+				.compact();
+	}
+
+	public static String getDisclosureJWT(AttributeDisjunctionList list) {
+		DisclosureProofRequest request = new DisclosureProofRequest(null, null, list);
+		ServiceProviderRequest spRequest = new ServiceProviderRequest("", request, 120);
+
+		return Jwts.builder()
+				.setPayload(getJwtClaims(spRequest, "sprequest", "verification_request"))
 				.signWith(KeyshareConfiguration.getInstance().getJwtAlgorithm(),
 						KeyshareConfiguration.getInstance().getJwtPrivateKey())
 				.compact();
@@ -27,12 +44,14 @@ public class ApiClient {
 	/**
 	 * Serialize the credentials to be issued to the body (claims) of a JWT token
 	 */
-	private static String getJwtClaims(HashMap<CredentialIdentifier, HashMap<String, String>> credentialList) {
+	private static String getJwtClaims(ClientRequest request,
+	                                   String type,
+	                                   String subject) {
 		HashMap<String, Object> claims = new HashMap<>(4);
-		claims.put("iprequest", getIdentityProviderRequest(credentialList));
+		claims.put(type, request);
 		claims.put("iat", System.currentTimeMillis()/1000);
 		claims.put("iss", KeyshareConfiguration.getInstance().getServerName());
-		claims.put("sub", "issue_request");
+		claims.put("sub", subject);
 
 		return GsonUtil.getGson().toJson(claims);
 	}

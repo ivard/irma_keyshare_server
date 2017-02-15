@@ -1,8 +1,16 @@
 package org.irmacard.keyshare.web;
 
+import com.google.gson.reflect.TypeToken;
+import org.irmacard.api.common.AttributeDisjunction;
+import org.irmacard.api.common.AttributeDisjunctionList;
+import org.irmacard.api.common.JwtParser;
+import org.irmacard.api.common.disclosure.DisclosureProofResult;
+import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.irmacard.keyshare.web.email.EmailVerifier;
@@ -15,8 +23,10 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Map;
 
 @Path("v1/web")
 public class WebClientResource {
@@ -60,14 +70,51 @@ public class WebClientResource {
 		return u.getAsMessage();
 	}
 
+
+
+	@GET
+	@Path("/login-irma")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getEmailDisclosureJwt(DisclosureProofResult proof) {
+		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
+		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
+		return ApiClient.getDisclosureJWT(list);
+	}
+
+	private AttributeIdentifier getEmailAttributeIdentifier() {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		return new AttributeIdentifier(
+				new CredentialIdentifier(
+						conf.getSchemeManager(),
+						conf.getEmailIssuer(),
+						conf.getEmailCredential()),
+				conf.getEmailAttribute()
+		);
+	}
+
+	@POST
+	@Path("/login-irma/proof")
+	public Response loginUsingEmailAttribute(String jwt) {
+		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
+		JwtParser<Map<AttributeIdentifier, String>> parser
+				= new JwtParser<>(t, true, 10*1000, "disclosure_result", "attributes");
+		parser.parseJwt(jwt);
+
+		Map<AttributeIdentifier, String> attrs = parser.getPayload();
+		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status")))
+			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
+
+		return login(attrs.get(getEmailAttributeIdentifier()));
+	}
+
 	@GET
 	@Path("/users/{user_id}/issue_email")
+	@Produces(MediaType.TEXT_PLAIN)
 	public String getEmailIssuanceJwt(@PathParam("user_id") int userID,
 	                                  @CookieParam("sessionid") String sessionid) {
 		User u = Users.getLoggedInUser(userID, sessionid);
-		if(u == null) {
+		if(u == null)
 			return null;
-		}
 
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
 
@@ -133,7 +180,10 @@ public class WebClientResource {
 		String email = EmailVerifier.getVerifiedAddress(token);
 		if (email == null)
 			return Response.status(Response.Status.NOT_FOUND).build();
+		return login(email);
+	}
 
+	private Response login(String email) {
 		User user = Users.getValidUser(email);
 		user.setEnrolled(true);
 		Users.getSessionForUser(user);
