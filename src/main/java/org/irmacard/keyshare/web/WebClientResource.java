@@ -95,6 +95,9 @@ public class WebClientResource {
 	@POST
 	@Path("/login-irma/proof")
 	public Response loginUsingEmailAttribute(String jwt) {
+
+		// TODO get apiserver public key and check jwt signature
+
 		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
 		JwtParser<Map<AttributeIdentifier, String>> parser
 				= new JwtParser<>(t, true, 10*1000, "disclosure_result", "attributes");
@@ -198,6 +201,7 @@ public class WebClientResource {
 		String email = user.getUsername();
 
 		if (User.count(User.USERNAME_FIELD + " = ?", email) != 0) {
+			logger.info("Sending OTP to {}", email);
 			EmailVerifier.verifyEmail(
 					email,
 					"Log in on keyshare server",
@@ -205,6 +209,8 @@ public class WebClientResource {
 					KeyshareConfiguration.getInstance().getUrl() + "/#login/",
 					60 * 60 // 1 hour
 			);
+		} else {
+			logger.warn("Received login attempt for nonexisting user: {}");
 		}
 
 		// If we return nothing, null, the empty string, or a bare word

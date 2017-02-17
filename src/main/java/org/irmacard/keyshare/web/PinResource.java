@@ -1,9 +1,9 @@
 package org.irmacard.keyshare.web;
 
-import org.irmacard.api.common.exceptions.ApiError;
-import org.irmacard.api.common.exceptions.ApiException;
 import org.irmacard.keyshare.common.KeyshareResult;
 import org.irmacard.keyshare.common.PinTokenMessage;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ public class PinResource extends BaseVerifier {
 
 		User u = Users.getValidUser(msg.getID());
 		if (!u.isEnabled() || !u.isEnrolled())
-			throw new ApiException(ApiError.UNAUTHORIZED);
+			throw new KeyshareException(KeyshareError.USER_BLOCKED);
 
 		KeyshareResult result;
 		if(u.checkAndCountPin(msg.getPin())) {

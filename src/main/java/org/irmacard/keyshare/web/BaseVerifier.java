@@ -1,20 +1,6 @@
 package org.irmacard.keyshare.web;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-
-import javax.ws.rs.Path;
-
-import org.irmacard.api.common.exceptions.ApiError;
-import org.irmacard.api.common.exceptions.ApiException;
+import io.jsonwebtoken.*;
 import org.irmacard.api.common.util.GsonUtil;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
@@ -22,6 +8,11 @@ import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.Path;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Contains methods to deal with user's authentication tokens (which are just JWT's signed
@@ -112,18 +103,20 @@ public class BaseVerifier {
 
 	public static User authorizeUser(String jwt, String username) {
 		if(!isAuthorizedJWT(jwt, username)) {
-			// TODO: use proper class that mentions auth server rather than issue/verify
-			throw new ApiException(ApiError.UNAUTHORIZED);
+			throw new KeyshareException(KeyshareError.UNAUTHORIZED);
 		}
 
 		User u = Users.getValidUser(username);
 		if(u == null) {
-			// TODO: maybe use more descriptive status code)
-			throw new ApiException(ApiError.UNEXPECTED_REQUEST, "Cannot find user");
+			throw new KeyshareException(KeyshareError.USER_NOT_FOUND);
 		}
 
-		if(!u.isEnabled() || !u.isEnrolled()) {
-			throw new ApiException(ApiError.UNAUTHORIZED, "Token disabled");
+		if(!u.isEnabled()) {
+			throw new KeyshareException(KeyshareError.USER_BLOCKED, "Token disabled");
+		}
+
+		if (!u.isEnabled()) {
+			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 		}
 
 		return u;

@@ -1,8 +1,6 @@
 package org.irmacard.keyshare.web.Users;
 
 import de.henku.jpaillier.PublicKey;
-import org.irmacard.api.common.exceptions.ApiError;
-import org.irmacard.api.common.exceptions.ApiException;
 import org.irmacard.api.common.util.GsonUtil;
 import org.irmacard.credentials.idemix.proofs.ProofP;
 import org.irmacard.credentials.idemix.proofs.ProofPCommitmentMap;
@@ -12,6 +10,8 @@ import org.irmacard.credentials.info.KeyException;
 import org.irmacard.credentials.info.PublicKeyIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.KeyshareConfiguration;
 import org.irmacard.keyshare.web.email.EmailSender;
 import org.javalite.activejdbc.Model;
@@ -197,7 +197,7 @@ public class User extends Model {
 	public ProofP buildProofP(BigInteger challenge) {
 		pbuilder = builders.get(getID());
 		if(pbuilder == null) {
-			throw new ApiException(ApiError.UNEXPECTED_REQUEST);
+			throw new KeyshareException(KeyshareError.UNEXPECTED_REQUEST);
 		}
 
 		ProofP proof = pbuilder.build(challenge, getPublicKey());

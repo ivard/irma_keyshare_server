@@ -34,9 +34,9 @@
 package org.irmacard.keyshare.web;
 
 import com.google.gson.JsonParseException;
-import org.irmacard.api.common.exceptions.ApiError;
-import org.irmacard.api.common.exceptions.ApiException;
 import org.irmacard.api.common.util.GsonUtil;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -70,7 +70,7 @@ public class GsonJerseyProvider implements MessageBodyWriter<Object>, MessageBod
 		try (InputStreamReader streamReader = new InputStreamReader(entityStream, UTF_8)) {
 			return GsonUtil.getGson().fromJson(streamReader, genericType);
 		} catch (JsonParseException e) {
-			throw new ApiException(ApiError.MALFORMED_INPUT, e.getMessage());
+			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, e.getMessage());
 		}
 	}
 
