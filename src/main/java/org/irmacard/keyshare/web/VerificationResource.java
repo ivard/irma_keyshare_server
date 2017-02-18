@@ -2,6 +2,8 @@ package org.irmacard.keyshare.web;
 
 import org.irmacard.keyshare.common.AuthorizationResult;
 import org.irmacard.keyshare.common.IRMAHeaders;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.slf4j.Logger;
@@ -31,9 +33,12 @@ public class VerificationResource extends BaseVerifier {
 
 		User u = Users.getValidUser(username);
 
-		if(!u.isEnabled() || !u.isEnrolled()) {
+		if(!u.isEnabled()) {
 			u.addLog("Authentication of IRMA token refused because of block");
-			return new AuthorizationResult(AuthorizationResult.STATUS_BLOCKED, null);
+			throw new KeyshareException(KeyshareError.USER_BLOCKED);
+		}
+		if (!u.isEnrolled()) {
+			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 		}
 
 		if(isAuthorizedJWT(jwt, username, true)) {
