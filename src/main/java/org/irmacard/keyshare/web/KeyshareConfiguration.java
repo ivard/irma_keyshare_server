@@ -25,6 +25,7 @@ public class KeyshareConfiguration {
 	private static KeyshareConfiguration instance;
 
 	private String server_name = "IRMATestCloud";
+	private String human_readable_name;
 
 	private String jwt_privatekey = "sk.der";
 	private String jwt_publickey = "pk.der";
@@ -204,8 +205,11 @@ public class KeyshareConfiguration {
 		return server_name;
 	}
 
-	public void setServerName(String server_name) {
-		this.server_name = server_name;
+	public String getHumanReadableName() {
+		if (human_readable_name == null || human_readable_name.length() == 0)
+			return server_name;
+		else
+			return human_readable_name;
 	}
 
 	public PublicKey getApiServerPublicKey() {

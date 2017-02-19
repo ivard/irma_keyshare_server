@@ -24,6 +24,7 @@ public class ApiClient {
 		IdentityProviderRequest request = getIdentityProviderRequest(credentialList);
 
 		return Jwts.builder()
+				.setHeaderParam("kid", KeyshareConfiguration.getInstance().getServerName())
 				.setPayload(getJwtClaims(request, "iprequest", "issue_request"))
 				.signWith(KeyshareConfiguration.getInstance().getJwtAlgorithm(),
 						KeyshareConfiguration.getInstance().getJwtPrivateKey())
@@ -35,6 +36,7 @@ public class ApiClient {
 		ServiceProviderRequest spRequest = new ServiceProviderRequest("", request, 120);
 
 		return Jwts.builder()
+				.setHeaderParam("kid", KeyshareConfiguration.getInstance().getServerName())
 				.setPayload(getJwtClaims(spRequest, "sprequest", "verification_request"))
 				.signWith(KeyshareConfiguration.getInstance().getJwtAlgorithm(),
 						KeyshareConfiguration.getInstance().getJwtPrivateKey())
@@ -50,7 +52,7 @@ public class ApiClient {
 		HashMap<String, Object> claims = new HashMap<>(4);
 		claims.put(type, request);
 		claims.put("iat", System.currentTimeMillis()/1000);
-		claims.put("iss", KeyshareConfiguration.getInstance().getServerName());
+		claims.put("iss", KeyshareConfiguration.getInstance().getHumanReadableName());
 		claims.put("sub", subject);
 
 		return GsonUtil.getGson().toJson(claims);
