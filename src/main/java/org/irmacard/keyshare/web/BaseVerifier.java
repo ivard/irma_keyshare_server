@@ -63,8 +63,8 @@ public class BaseVerifier {
 					.getBody();
 		} catch (UnsupportedJwtException|MalformedJwtException|SignatureException
 				|ExpiredJwtException|IllegalArgumentException e) {
-			e.printStackTrace();
 			logger.warn("JWT {} didn't verify", jwt);
+			logger.warn(e.getMessage());
 		}
 
 		return claims;

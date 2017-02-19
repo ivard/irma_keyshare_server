@@ -12,7 +12,6 @@ public class DatabaseResponseFilter implements ContainerResponseFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-		logger.warn("End of request!");
 		//CloudApplication.closeDatabase();
 	}
 }

@@ -50,14 +50,14 @@ public class Users {
 
 	static public UserSession getSessionForUser(User u) {
 		String sessionToken = randomSessionToken();
-		logger.warn("Created session {} for user {}", sessionToken, u.toString());
+		logger.warn("Created session {} for user {}", sessionToken, u.getUsername());
 		u.setSessionToken(sessionToken);
 		u.saveIt();
 		return new UserSession(u.getUsername(), sessionToken, u.getID());
 	}
 
 	static public void clearSessionForUser(User u) {
-		logger.warn("Removing session {} for user {}", u.getSessionToken(), u.toString());
+		logger.warn("Removing session {} for user {}", u.getSessionToken(), u.getUsername());
 		u.setSessionToken("");
 		u.saveIt();
 	}
@@ -92,7 +92,7 @@ public class Users {
 	}
 
 	static public User getUserForID(int user_id) {
-		System.out.println("Querying for user id = " + user_id);
+		logger.info("Querying for user id = " + user_id);
 		return User.findFirst("ID = ?", user_id);
 	}
 

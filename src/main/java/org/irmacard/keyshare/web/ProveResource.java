@@ -56,7 +56,7 @@ public class ProveResource {
 
 		User u = VerificationResource.authorizeUser(jwt, username);
 
-		logger.info("Gotten challenge: {}, for user: {}", challenge, username);
+		logger.info("Gotten challenge for user: {}", username);
 
 		ProofP proof = u.buildProofP(challenge);
 		return BaseVerifier.getSignedJWT("ProofP", proof, JWT_SUBJECT, PROOF_JWT_EXPIRY);

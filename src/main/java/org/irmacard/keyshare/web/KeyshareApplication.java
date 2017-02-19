@@ -90,7 +90,7 @@ public class KeyshareApplication extends ResourceConfig {
 
         EmailVerifier.setupDatabaseCleanupTask();
 
-        System.out.println("Running keyshare application!");
+        logger.info("Running keyshare application");
         org.javalite.activejdbc.LogFilter.setLogExpression("a^");
         openDatabase();
         closeDatabase();
@@ -98,7 +98,7 @@ public class KeyshareApplication extends ResourceConfig {
 
     public static void openDatabase() {
         if(!Base.hasConnection()) {
-            logger.warn("Opening database connection!");
+            logger.warn("Opening database connection");
             Base.open("java:comp/env/jdbc/irma_keyshare");
         }
     }

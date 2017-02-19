@@ -18,7 +18,7 @@ public class DatabaseRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		logger.warn("Before request, opening databse!");
+//		logger.warn("Before request, opening databse!");
 		KeyshareApplication.openDatabase();
 	}
 }

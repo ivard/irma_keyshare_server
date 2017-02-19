@@ -37,14 +37,12 @@ public class WebClientResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response userInformation(@PathParam("user_id") int userID,
 	                                @CookieParam("sessionid") String sessionid) {
-		System.out.println("Retrieving user " + userID);
+		logger.info("Retrieving user " + userID);
 		User u = Users.getLoggedInUser(userID, sessionid);
 
 		if(u == null) {
-			System.out.println("User couldn't be found!");
+			logger.warn("User {} couldn't be found!", userID);
 			return null;
-		} else {
-			logger.warn("User found: {}!!!", u.toString());
 		}
 
 		logger.trace("Requested user information for user {}", u.getUsername());

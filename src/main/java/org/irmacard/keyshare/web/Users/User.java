@@ -220,11 +220,7 @@ public class User extends Model {
 		for(LogEntryRecord entry : records) {
 			lst.add(new LogEntry(entry));
 		}
-		
-		System.out.println("Log entries: ");
-		for(LogEntry e : lst) {
-			System.out.println(e);
-		}
+
 		return lst;
 	}
 
