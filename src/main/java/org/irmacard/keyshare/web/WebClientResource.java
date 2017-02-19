@@ -68,12 +68,10 @@ public class WebClientResource {
 		return u.getAsMessage();
 	}
 
-
-
 	@GET
 	@Path("/login-irma")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String getEmailDisclosureJwt(DisclosureProofResult proof) {
+	public String getEmailDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
 		return ApiClient.getDisclosureJWT(list);
