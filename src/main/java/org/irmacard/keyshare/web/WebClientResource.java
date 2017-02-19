@@ -95,12 +95,10 @@ public class WebClientResource {
 	@POST
 	@Path("/login-irma/proof")
 	public Response loginUsingEmailAttribute(String jwt) {
-
-		// TODO get apiserver public key and check jwt signature
-
 		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
 		JwtParser<Map<AttributeIdentifier, String>> parser
-				= new JwtParser<>(t, true, 10*1000, "disclosure_result", "attributes");
+				= new JwtParser<>(t, false, 10*1000, "disclosure_result", "attributes");
+		parser.setSigningKey(KeyshareConfiguration.getInstance().getApiServerPublicKey());
 		parser.parseJwt(jwt);
 
 		Map<AttributeIdentifier, String> attrs = parser.getPayload();

@@ -45,6 +45,8 @@ public class KeyshareConfiguration {
 
 	private int session_timeout = 30;
 
+	private String apiserver_publickey = "apiserver.der";
+
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
@@ -206,6 +208,13 @@ public class KeyshareConfiguration {
 		this.server_name = server_name;
 	}
 
+	public PublicKey getApiServerPublicKey() {
+		try {
+			return parsePublicKey(getResource(apiserver_publickey));
+		} catch (KeyManagementException|IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public PublicKey getJwtPublicKey() {
 		if (jwtPublicKey == null) {
