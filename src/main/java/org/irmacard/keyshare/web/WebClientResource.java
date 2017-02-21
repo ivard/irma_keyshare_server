@@ -14,6 +14,7 @@ import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.Users.Users;
 import org.irmacard.keyshare.web.email.EmailVerifier;
+import org.irmacard.keyshare.web.filters.RateLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,7 @@ public class WebClientResource {
 	@POST @Path("/users/selfenroll")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RateLimit
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.register(user);
 		if(u == null)
@@ -71,6 +73,7 @@ public class WebClientResource {
 	@GET
 	@Path("/login-irma")
 	@Produces(MediaType.TEXT_PLAIN)
+	@RateLimit
 	public String getEmailDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
@@ -90,6 +93,7 @@ public class WebClientResource {
 
 	@POST
 	@Path("/login-irma/proof")
+	@RateLimit
 	public Response loginUsingEmailAttribute(String jwt) {
 		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
 		JwtParser<Map<AttributeIdentifier, String>> parser
@@ -107,6 +111,7 @@ public class WebClientResource {
 	@GET
 	@Path("/users/{user_id}/issue_email")
 	@Produces(MediaType.TEXT_PLAIN)
+	@RateLimit
 	public String getEmailIssuanceJwt(@PathParam("user_id") int userID,
 	                                  @CookieParam("sessionid") String sessionid) {
 		User u = Users.getLoggedInUser(userID, sessionid);
@@ -173,6 +178,7 @@ public class WebClientResource {
 
 	@GET
 	@Path("/enroll/{token}")
+	@RateLimit
 	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
 		String email = EmailVerifier.getVerifiedAddress(token);
 		if (email == null)
@@ -191,6 +197,7 @@ public class WebClientResource {
 	@POST
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@RateLimit
 	public Response userLogin(UserLoginMessage user) throws AddressException {
 		String email = user.getUsername();
 
@@ -214,6 +221,7 @@ public class WebClientResource {
 
 	@GET
 	@Path("/login/{token}")
+	@RateLimit
 	public Response oneTimePasswordLogin(@PathParam("token") String token) throws URISyntaxException {
 		return enroll(token);
 	}

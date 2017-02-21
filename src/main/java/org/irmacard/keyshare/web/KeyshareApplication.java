@@ -42,6 +42,7 @@ import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.DatabaseRequestFilter;
 import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;
+import org.irmacard.keyshare.web.filters.RateLimitRequestFilter;
 import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
 import org.javalite.activejdbc.Base;
 import org.slf4j.Logger;
@@ -85,6 +86,7 @@ public class KeyshareApplication extends ResourceConfig {
         // no data is lost, at least when working with H2. These two 
         register(DatabaseRequestFilter.class);
         register(DatabaseResponseFilter.class);
+        register(RateLimitRequestFilter.class);
 
         register(WebClientResource.class);
 
