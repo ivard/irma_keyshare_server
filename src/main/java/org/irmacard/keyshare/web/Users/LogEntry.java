@@ -1,4 +1,4 @@
-package org.irmacard.keyshare.web.Users;
+package org.irmacard.keyshare.web.users;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

@@ -1,6 +1,6 @@
 package org.irmacard.keyshare.web.email;
 
-import org.irmacard.keyshare.web.Users.Users;
+import org.irmacard.keyshare.web.users.Users;
 import org.javalite.activejdbc.Model;
 
 public class EmailVerificationRecord extends Model {

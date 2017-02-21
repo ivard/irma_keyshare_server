@@ -38,7 +38,6 @@ import org.irmacard.credentials.idemix.info.IdemixKeyStoreDeserializer;
 import org.irmacard.credentials.info.DescriptionStore;
 import org.irmacard.credentials.info.DescriptionStoreDeserializer;
 import org.irmacard.credentials.info.InfoException;
-import org.irmacard.keyshare.web.Users.User;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.DatabaseRequestFilter;
 import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;

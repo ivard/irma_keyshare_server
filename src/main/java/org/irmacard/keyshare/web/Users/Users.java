@@ -1,4 +1,4 @@
-package org.irmacard.keyshare.web.Users;
+package org.irmacard.keyshare.web.users;
 
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.List;
 
 public class Users {
 	private static Logger logger = LoggerFactory.getLogger(Users.class);

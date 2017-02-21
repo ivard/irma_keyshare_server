@@ -1,4 +1,4 @@
-package org.irmacard.keyshare.web.Users;
+package org.irmacard.keyshare.web.users;
 
 import de.henku.jpaillier.PublicKey;
 import org.irmacard.api.common.util.GsonUtil;

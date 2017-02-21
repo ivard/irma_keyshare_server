@@ -4,8 +4,8 @@ import io.jsonwebtoken.*;
 import org.irmacard.api.common.util.GsonUtil;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
-import org.irmacard.keyshare.web.Users.User;
-import org.irmacard.keyshare.web.Users.Users;
+import org.irmacard.keyshare.web.users.User;
+import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

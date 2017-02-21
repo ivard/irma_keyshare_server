@@ -7,7 +7,7 @@ import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
 import org.irmacard.credentials.info.PublicKeyIdentifier;
 import org.irmacard.keyshare.common.IRMAHeaders;
-import org.irmacard.keyshare.web.Users.User;
+import org.irmacard.keyshare.web.users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

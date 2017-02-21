@@ -1,4 +1,4 @@
-package org.irmacard.keyshare.web.Users;
+package org.irmacard.keyshare.web.users;
 
 import org.javalite.activejdbc.Model;
 
