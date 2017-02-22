@@ -45,6 +45,7 @@ public class KeyshareConfiguration {
 	private String email_attribute = "";
 
 	private int session_timeout = 30;
+	private int rate_limit = 3;
 
 	private String apiserver_publickey = "apiserver.der";
 
@@ -131,6 +132,10 @@ public class KeyshareConfiguration {
 
 	public int getSessionTimeout() {
 		return session_timeout;
+	}
+
+	public int getRateLimit() {
+		return rate_limit;
 	}
 
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {

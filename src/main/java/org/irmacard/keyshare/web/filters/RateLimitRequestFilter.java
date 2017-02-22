@@ -1,5 +1,6 @@
 package org.irmacard.keyshare.web.filters;
 
+import org.irmacard.keyshare.web.KeyshareConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RateLimit
 public class RateLimitRequestFilter implements ContainerRequestFilter {
 	private static Logger logger = LoggerFactory.getLogger(RateLimitRequestFilter.class);
-	private static final int limit = 3;
 
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Long>>
 			requests = new ConcurrentHashMap<>();
@@ -32,6 +32,10 @@ public class RateLimitRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
+		int limit = KeyshareConfiguration.getInstance().getRateLimit();
+		if (limit == 0)
+			return;
+
 		String ip = servletRequest.getRemoteAddr();
 		String path = servletRequest.getPathInfo();
 		Long time = System.currentTimeMillis();
