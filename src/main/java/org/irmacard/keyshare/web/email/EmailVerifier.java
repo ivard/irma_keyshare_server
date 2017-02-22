@@ -1,23 +1,16 @@
 package org.irmacard.keyshare.web.email;
 
-import org.irmacard.keyshare.web.KeyshareApplication;
 import org.irmacard.keyshare.web.KeyshareConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.mail.internet.AddressException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 
-import static java.util.concurrent.TimeUnit.HOURS;
 import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_TIMEOUT;
 import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_VALIDITY;
 
 public class EmailVerifier {
 	private static Logger logger = LoggerFactory.getLogger(EmailVerifier.class);
-
-	private static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 	public static void verifyEmail(String email,
 	                               String subject,
@@ -76,22 +69,5 @@ public class EmailVerifier {
 						"AND time_verified + validity > ?",
 				email, System.currentTimeMillis()/1000
 		) > 0;
-	}
-
-	public static void setupDatabaseCleanupTask() {
-		final Runnable cleaner = new Runnable() {
-			@Override public void run() {
-				logger.warn("Deleting expired email verifications");
-				KeyshareApplication.openDatabase();
-				EmailVerificationRecord.delete(
-						"(time_verified IS NULL AND time_created + timeout < ?) "
-						+ "OR (time_verified IS NOT NULL AND time_verified + validity < ?)",
-						System.currentTimeMillis()/1000,
-						System.currentTimeMillis()/1000
-				);
-			}
-		};
-
-		final ScheduledFuture<?> beeperHandle = scheduler.scheduleAtFixedRate(cleaner, 6, 6, HOURS);
 	}
 }

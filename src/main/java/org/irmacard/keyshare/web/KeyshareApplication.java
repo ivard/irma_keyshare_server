@@ -89,8 +89,6 @@ public class KeyshareApplication extends ResourceConfig {
 
         register(WebClientResource.class);
 
-        EmailVerifier.setupDatabaseCleanupTask();
-
         logger.info("Running keyshare application");
         org.javalite.activejdbc.LogFilter.setLogExpression("a^");
         openDatabase();
