@@ -31,7 +31,7 @@ public class User extends Model {
 
 	private static final int MAX_PIN_TRIES = 3;
 	private static final int BACKOFF_FACTOR = 2;
-	private static final int BACKOFF_START = 2;
+	private static final int BACKOFF_START = 5;
 
 	private transient ProofPListBuilder pbuilder = null;
 	private transient PublicKey publicKey;
