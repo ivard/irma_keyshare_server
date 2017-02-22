@@ -13,12 +13,10 @@ import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.KeyshareConfiguration;
-import org.irmacard.keyshare.web.email.EmailSender;
 import org.javalite.activejdbc.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.mail.internet.AddressException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -32,6 +30,8 @@ public class User extends Model {
 	private static Map<Integer, ProofPListBuilder> builders = new HashMap<>();
 
 	private static final int MAX_PIN_TRIES = 3;
+	private static final int BACKOFF_FACTOR = 2;
+	private static final int BACKOFF_START = 2;
 
 	private transient ProofPListBuilder pbuilder = null;
 	private transient PublicKey publicKey;
@@ -47,6 +47,7 @@ public class User extends Model {
 	public static final String ENABLED_FIELD = "enabled";
 	public static final String SESSION_FIELD = "sessionToken";
 	public static final String PINCOUNTER_FIELD = "pincounter";
+	public static final String PINBLOCK_DATE = "pinblockDate";
 
 	public User(String username, String password, String pin, BigInteger secret, PublicKey publicKey) {
 		setString(USERNAME_FIELD, username);
@@ -143,7 +144,6 @@ public class User extends Model {
 	}
 
 	public boolean checkAndCountPin(String pin) {
-		// TODO: use more elegant mechanism
 		int pinCounter = getPinCounter();
 
 		boolean correct = getPIN().equals(pin);
@@ -151,27 +151,16 @@ public class User extends Model {
 		setPinCounter(pinCounter);
 
 		if(correct) {
-			addLog("Succesfully verified PIN!");
+			addLog("Succesfully verified PIN");
 			resetPinCounter();
 		} else {
-			addLog("Pin verification failed (" + getPinTriesRemaining() + " tries remaining)");
+			addLog("PIN verification failed (" + getPinTriesRemaining() + " tries remaining)");
 
 			if(pinCounter >= MAX_PIN_TRIES) {
-				logger.warn("Pin tried too often, disabled user {}", getUsername());
-				addLog("Pin tried too often, user disabled");
-				setEnabled(false);
-				try {
-					EmailSender.send(
-							getUsername(),
-							"Your IRMA app has been blocked due to too many PIN attempts",
-							"Dear " + getUsername() + ",\n\n"
-							+ "Your IRMA app has entered an incorrect PIN too may times and has been blocked. "
-							+ "Please login on the keyshare portal to re-enable your IRMA app. The keyshare portal "
-							+ "can be found here: " + KeyshareConfiguration.getInstance().getUrl()
-					);
-				} catch (AddressException e) {
-					e.printStackTrace();
-				}
+				incrementPinblock();
+				int block = getPinblockRelease();
+				logger.warn("PIN tried too often, disabled user {} for {} seconds", getUsername(), block);
+				addLog(String.format("PIN tried too often, IRMA app disabled for %d seconds", block));
 			}
 		}
 
@@ -204,7 +193,7 @@ public class User extends Model {
 
 		// Ensure that we can only answer one challenge (lest we totally break security)
 		pbuilder = null;
-		addLog("Contributed to proof");
+		addLog("Contributed to IRMA session");
 
 		return proof;
 	}
@@ -230,17 +219,53 @@ public class User extends Model {
 
 	public void setEnabled(boolean enabled) {
 		if(enabled) {
-			addLog("IRMA token enabled");
+			addLog("IRMA app enabled");
 			resetPinCounter();
 		} else {
-			addLog("IRMA token disabled");
+			addLog("IRMA app disabled");
 		}
 
 		setBoolean(ENABLED_FIELD, enabled);
 		saveIt();
 	}
 
+	private int getPinblockLevel() {
+		return Math.max(0, getPinCounter() - MAX_PIN_TRIES + 1);
+	}
+
+	public void incrementPinblock() {
+		long duration = BACKOFF_START * 60 *  (
+				pow(BACKOFF_FACTOR, getPinblockLevel() - 1)
+		);
+		setLong(PINBLOCK_DATE, System.currentTimeMillis()/1000 + duration);
+	}
+
+	public int getPinblockRelease() {
+		if (getPinblockLevel() == 0)
+			return 0;
+
+		long date = getLong(PINBLOCK_DATE);
+		return Math.max(0, (int)(date - System.currentTimeMillis()/1000));
+	}
+
+	public boolean isPinBlocked() {
+		return getPinblockRelease() > 0;
+	}
+
 	public boolean isEnabled() {
-		return getBoolean(ENABLED_FIELD);
+		return getBoolean(ENABLED_FIELD) && !isPinBlocked();
+	}
+
+
+	/**
+	 * Returns a^b.
+	 */
+	// http://stackoverflow.com/a/20984477
+	public static long pow(long a, int b)
+	{
+		if (b == 0)        return 1;
+		if (b == 1)        return a;
+		if (b%2 == 0)      return     pow (a * a, b/2); // even a=(a^2)^b/2
+		else               return a * pow (a * a, b/2); // odd  a=a*(a^2)^b/2
 	}
 }

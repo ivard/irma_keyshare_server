@@ -34,8 +34,8 @@ public class VerificationResource extends BaseVerifier {
 		User u = Users.getValidUser(username);
 
 		if(!u.isEnabled()) {
-			u.addLog("Authentication of IRMA token refused because of block");
-			throw new KeyshareException(KeyshareError.USER_BLOCKED);
+			u.addLog("Authentication of IRMA app refused because of block");
+			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 		if (!u.isEnrolled()) {
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);

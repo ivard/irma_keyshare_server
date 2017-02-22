@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users
     lastSeen long,
     pin varchar(256),
     pinCounter int,
+    pinBlockDate long,
     keyshare varchar(256),
     publicKey varchar(4096),
     enrolled boolean,

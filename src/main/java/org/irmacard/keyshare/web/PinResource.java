@@ -30,13 +30,16 @@ public class PinResource extends BaseVerifier {
 
 		if(!u.isEnabled()) {
 			u.addLog("PIN check refused because of block");
-			throw new KeyshareException(KeyshareError.USER_BLOCKED);
+			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 		if (!u.isEnrolled())
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
 		if(!u.checkAndCountPin(msg.getPin())) {
-			result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
+			if (!u.isPinBlocked())
+				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
+			else
+				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
 		} else {
 			String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
 					KeyshareConfiguration.getInstance().getPinExpiry());

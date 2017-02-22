@@ -112,7 +112,7 @@ public class BaseVerifier {
 		}
 
 		if(!u.isEnabled()) {
-			throw new KeyshareException(KeyshareError.USER_BLOCKED, "Token disabled");
+			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 
 		if (!u.isEnabled()) {
