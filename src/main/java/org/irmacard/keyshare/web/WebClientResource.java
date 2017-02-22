@@ -73,7 +73,6 @@ public class WebClientResource {
 	@GET
 	@Path("/login-irma")
 	@Produces(MediaType.TEXT_PLAIN)
-	@RateLimit
 	public String getEmailDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
