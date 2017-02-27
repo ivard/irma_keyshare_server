@@ -132,22 +132,6 @@ public class WebClientResource {
 	}
 
 	@POST
-	@Path("/users/{user_id}/enable")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response userEnable(@PathParam("user_id") int userID,
-	                           @CookieParam("sessionid") String sessionid) {
-		User u = Users.getLoggedInUser(userID, sessionid);
-		if(u == null) {
-			return null;
-		}
-
-		logger.info("Enabled IRMA app for user {}", u.getUsername());
-
-		u.setEnabled(true);
-		return getCookiePostResponse(u);
-	}
-
-	@POST
 	@Path("/users/{user_id}/disable")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response userDisable(@PathParam("user_id") int userID,
