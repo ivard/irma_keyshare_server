@@ -11,6 +11,7 @@ import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.users.LogEntry;
 import org.irmacard.keyshare.web.users.User;
 import org.irmacard.keyshare.web.users.Users;
 import org.irmacard.keyshare.web.email.EmailVerifier;
@@ -26,6 +27,8 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -152,11 +155,23 @@ public class WebClientResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getLogs(@PathParam("user_id") int userID,
 	                        @CookieParam("sessionid") String sessionid) {
+		return getLogs(userID, 0, sessionid);
+	}
+
+	@GET
+	@Path("/users/{user_id}/logs/{time}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getLogs(@PathParam("user_id") int userID,
+	                        @PathParam("time") long time,
+	                        @CookieParam("sessionid") String sessionid)  {
 		User u = Users.getLoggedInUser(userID, sessionid);
 
 		logger.debug("Requested logs for user {}", u.getUsername());
 
-		return getCookiePostResponse(u.getLogs(), u);
+		if (time == 0)
+			time = System.currentTimeMillis();
+
+		return getCookiePostResponse(u.getLogs(time), u);
 	}
 
 	@GET

@@ -9,17 +9,18 @@ public class LogEntry {
 	public String time;
 	public String event;
 
-	public LogEntry(LogEntryRecord record) {
-		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-		df.setTimeZone(tz);
-		
-		df.format(new Date());
+	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-		this.time = df.format(new Date(record.getTime()));
+	static {
+		DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
+
+	public LogEntry(LogEntryRecord record) {
+		this.time = DATE_FORMAT.format(new Date(record.getTime() * 1000));
 		this.event = record.getEvent();
 	}
-	
+
+	@Override
 	public String toString() {
 		return "At " + time + ": " + event;
 	}

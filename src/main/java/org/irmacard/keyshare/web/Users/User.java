@@ -19,10 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class User extends Model {
 	private static Logger logger = LoggerFactory.getLogger(User.class);
@@ -202,15 +199,34 @@ public class User extends Model {
 		add(new LogEntryRecord(message));
 	}
 
-	public List<LogEntry> getLogs() {
+	public LogEntryList getLogs(long start) {
+		List<LogEntryRecord> records = get(LogEntryRecord.class,
+						LogEntryRecord.DATE_FIELD + " <= ?", start)
+				.orderBy(LogEntryRecord.DATE_FIELD + " desc")
+				.limit(10 + 1); // Fetch one extra for its timestamp
+
+		// Fetch the items that would be displayed on the previous page,
+		// to find out the timestamp of the first item
+		List<LogEntryRecord> prevRecords = get(LogEntryRecord.class,
+						LogEntryRecord.DATE_FIELD + " > ?", start)
+				.orderBy(LogEntryRecord.DATE_FIELD + " asc")
+				.limit(10);
+
 		ArrayList<LogEntry> lst = new ArrayList<>();
-		List<LogEntryRecord> records = getAll(LogEntryRecord.class)
-				.orderBy(LogEntryRecord.DATE_FIELD + " desc");
-		for(LogEntryRecord entry : records) {
+		int count = 0;
+		boolean hasNext = false;
+
+		for(LogEntryRecord entry : records)
 			lst.add(new LogEntry(entry));
+
+		if (lst.size() == 11) {
+			lst.remove(10);
+			hasNext = true;
 		}
 
-		return lst;
+		Long next = hasNext ? records.get(10).getTime() : null;
+		Long prev = prevRecords.size() != 0 ? prevRecords.get(prevRecords.size()-1).getTime() : null;
+		return new LogEntryList(lst, prev, next);
 	}
 
 	private void resetPinCounter() {
