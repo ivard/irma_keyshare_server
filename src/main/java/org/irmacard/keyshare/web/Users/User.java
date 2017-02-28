@@ -272,6 +272,11 @@ public class User extends Model {
 		return getBoolean(ENABLED_FIELD) && !isPinBlocked();
 	}
 
+	public void unregister() {
+		LogEntryRecord.delete("user_id = ?", getID());
+		delete();
+	}
+
 
 	/**
 	 * Returns a^b.

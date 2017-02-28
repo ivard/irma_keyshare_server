@@ -11,11 +11,10 @@ import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
-import org.irmacard.keyshare.web.users.LogEntry;
-import org.irmacard.keyshare.web.users.User;
-import org.irmacard.keyshare.web.users.Users;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.RateLimit;
+import org.irmacard.keyshare.web.users.User;
+import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +26,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -148,6 +145,25 @@ public class WebClientResource {
 
 		u.setEnabled(false);
 		return getCookiePostResponse(u);
+	}
+
+	@POST
+	@Path("/users/{user_id}/delete")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response userDelete(@PathParam("user_id") int userID,
+	                           @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if(u == null) {
+			return null;
+		}
+
+		logger.warn("Unregistering user {}", u.getUsername());
+		u.unregister();
+
+		// Logout the user
+		NewCookie nullCookie = new NewCookie("sessionid", null, "/", null, null, 0,
+				KeyshareConfiguration.getInstance().isHttpsEnabled());
+		return Response.ok("OK").cookie(nullCookie).build();
 	}
 
 	@GET
