@@ -5,6 +5,7 @@ import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.JwtParser;
 import org.irmacard.api.common.disclosure.DisclosureProofResult;
+import org.irmacard.api.common.ApiClient;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
@@ -76,7 +77,12 @@ public class WebClientResource {
 	public String getEmailDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
-		return ApiClient.getDisclosureJWT(list);
+		return ApiClient.getDisclosureJWT(list,
+				KeyshareConfiguration.getInstance().getServerName(),
+				KeyshareConfiguration.getInstance().getHumanReadableName(),
+				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
+				KeyshareConfiguration.getInstance().getJwtPrivateKey()
+				);
 	}
 
 	private AttributeIdentifier getEmailAttributeIdentifier() {
@@ -128,7 +134,12 @@ public class WebClientResource {
 				KeyshareConfiguration.getInstance().getEmailCredential()
 		), attrs);
 
-		return ApiClient.getIssuingJWT(credentials);
+		return ApiClient.getIssuingJWT(credentials,
+				KeyshareConfiguration.getInstance().getHumanReadableName(),
+				true,
+				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
+				KeyshareConfiguration.getInstance().getJwtPrivateKey()
+		);
 	}
 
 	@POST
