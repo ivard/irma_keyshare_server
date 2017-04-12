@@ -135,6 +135,7 @@ public class WebClientResource {
 		), attrs);
 
 		return ApiClient.getIssuingJWT(credentials,
+				KeyshareConfiguration.getInstance().getServerName(),
 				KeyshareConfiguration.getInstance().getHumanReadableName(),
 				true,
 				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
