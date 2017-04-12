@@ -1,0 +1,12 @@
+package org.irmacard.keyshare.web.users;
+
+public enum LogEntryType {
+	PIN_CHECK_REFUSED,
+	PIN_CHECK_SUCCESS,
+	PIN_CHECK_FAILED,
+	PIN_CHECK_BLOCKED,
+	IRMA_SESSION,
+	IRMA_ENABLED,
+	IRMA_BLOCKED,
+	IRMA_APP_AUTH_REFUSED
+}

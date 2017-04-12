@@ -4,6 +4,7 @@ import org.irmacard.keyshare.common.AuthorizationResult;
 import org.irmacard.keyshare.common.IRMAHeaders;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.users.LogEntryType;
 import org.irmacard.keyshare.web.users.User;
 import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class VerificationResource extends BaseVerifier {
 		User u = Users.getValidUser(username);
 
 		if(!u.isEnabled()) {
-			u.addLog("Authentication of IRMA app refused because of block");
+			u.addLog(LogEntryType.IRMA_APP_AUTH_REFUSED);
 			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 		if (!u.isEnrolled()) {

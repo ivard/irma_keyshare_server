@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS log_entry_records
     id int unsigned NOT NULL auto_increment PRIMARY KEY,
     time long,
     event varchar(256),
+    param int,
     user_id int unsigned
 );
 

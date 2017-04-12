@@ -148,16 +148,16 @@ public class User extends Model {
 		setPinCounter(pinCounter);
 
 		if(correct) {
-			addLog("Succesfully verified PIN");
+			addLog(LogEntryType.PIN_CHECK_SUCCESS);
 			resetPinCounter();
 		} else {
-			addLog("PIN verification failed (" + getPinTriesRemaining() + " tries remaining)");
+			addLog(LogEntryType.PIN_CHECK_FAILED, getPinTriesRemaining());
 
 			if(pinCounter >= MAX_PIN_TRIES) {
 				incrementPinblock();
 				int block = getPinblockRelease();
 				logger.warn("PIN tried too often, disabled user {} for {} seconds", getUsername(), block);
-				addLog(String.format("PIN tried too often, IRMA app disabled for %d seconds", block));
+				addLog(LogEntryType.PIN_CHECK_BLOCKED, block);
 			}
 		}
 
@@ -190,13 +190,17 @@ public class User extends Model {
 
 		// Ensure that we can only answer one challenge (lest we totally break security)
 		pbuilder = null;
-		addLog("Contributed to IRMA session");
+		addLog(LogEntryType.IRMA_SESSION);
 
 		return proof;
 	}
 
-	public void addLog(String message) {
-		add(new LogEntryRecord(message));
+	public void addLog(LogEntryType event) {
+		add(new LogEntryRecord(event));
+	}
+
+	public void addLog(LogEntryType event, int param) {
+		add(new LogEntryRecord(event, param));
 	}
 
 	public LogEntryList getLogs(long start) {
@@ -235,10 +239,10 @@ public class User extends Model {
 
 	public void setEnabled(boolean enabled) {
 		if(enabled) {
-			addLog("IRMA app enabled");
+			addLog(LogEntryType.IRMA_ENABLED);
 			resetPinCounter();
 		} else {
-			addLog("IRMA app disabled");
+			addLog(LogEntryType.IRMA_BLOCKED);
 		}
 
 		setBoolean(ENABLED_FIELD, enabled);

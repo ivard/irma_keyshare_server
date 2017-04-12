@@ -7,7 +7,8 @@ import java.util.TimeZone;
 
 public class LogEntry {
 	public String time;
-	public String event;
+	public LogEntryType event;
+	public Integer param;
 
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
@@ -18,6 +19,7 @@ public class LogEntry {
 	public LogEntry(LogEntryRecord record) {
 		this.time = DATE_FORMAT.format(new Date(record.getTime() * 1000));
 		this.event = record.getEvent();
+		this.param = record.getParam();
 	}
 
 	@Override

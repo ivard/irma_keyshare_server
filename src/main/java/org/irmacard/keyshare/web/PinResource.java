@@ -4,6 +4,7 @@ import org.irmacard.keyshare.common.KeyshareResult;
 import org.irmacard.keyshare.common.PinTokenMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.users.LogEntryType;
 import org.irmacard.keyshare.web.users.User;
 import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class PinResource extends BaseVerifier {
 		User u = Users.getValidUser(msg.getID());
 
 		if(!u.isEnabled()) {
-			u.addLog("PIN check refused because of block");
+			u.addLog(LogEntryType.PIN_CHECK_REFUSED);
 			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 		if (!u.isEnrolled())
