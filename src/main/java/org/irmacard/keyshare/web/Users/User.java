@@ -39,7 +39,7 @@ public class User extends Model {
 	public static final String PIN_FIELD = "pin";
 	public static final String KEYSHARE_FIELD = "keyshare";
 	public static final String PUBLICKEY_FIELD = "publickey";
-
+	public static final String EMAILISSUED_FIELD = "email_issued";
 	public static final String ENROLLED_FIELD = "enrolled";
 	public static final String ENABLED_FIELD = "enabled";
 	public static final String SESSION_FIELD = "sessionToken";
@@ -58,6 +58,7 @@ public class User extends Model {
 
 		setBoolean(ENROLLED_FIELD, false);
 		setBoolean(ENABLED_FIELD, true);
+		setBoolean(EMAILISSUED_FIELD, false);
 		saveIt();
 	}
 
@@ -125,7 +126,7 @@ public class User extends Model {
 	}
 
 	public UserMessage getAsMessage() {
-		return new UserMessage(getUsername(), getSessionToken(), "" + getID(), isEnrolled(), isEnabled());
+		return new UserMessage(getUsername(), getSessionToken(), "" + getID(), isEnrolled(), isEnabled(), getEmailAddressIssued());
 	}
 
 	public String getPIN() {
@@ -247,6 +248,15 @@ public class User extends Model {
 
 		setBoolean(ENABLED_FIELD, enabled);
 		saveIt();
+	}
+
+	public void setEmailAddressIssued() {
+		setBoolean(EMAILISSUED_FIELD, true);
+		saveIt();
+	}
+
+	public boolean getEmailAddressIssued() {
+		return getBoolean(EMAILISSUED_FIELD);
 	}
 
 	private int getPinblockLevel() {

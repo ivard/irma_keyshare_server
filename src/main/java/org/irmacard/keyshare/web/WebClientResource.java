@@ -77,12 +77,13 @@ public class WebClientResource {
 	public String getEmailDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
-		return ApiClient.getDisclosureJWT(list,
+		return ApiClient.getDisclosureJWT(
+				list,
 				KeyshareConfiguration.getInstance().getServerName(),
 				KeyshareConfiguration.getInstance().getHumanReadableName(),
 				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
 				KeyshareConfiguration.getInstance().getJwtPrivateKey()
-				);
+		);
 	}
 
 	private AttributeIdentifier getEmailAttributeIdentifier() {
@@ -124,6 +125,17 @@ public class WebClientResource {
 			return null;
 
 		return getEmailDisclosureJwt();
+	}
+
+	@POST
+	@Path("/users/{user_id}/email_issued")
+	public Response setEmailAddressIssued(@PathParam("user_id") int userID,
+	                                  @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if(u == null)
+			return null;
+		u.setEmailAddressIssued();
+		return getCookiePostResponse(u);
 	}
 
 	@GET
@@ -298,7 +310,6 @@ public class WebClientResource {
 		u.setSeen();
 		u.saveIt();
 
-		// TODO magic number alert
 		return new NewCookie[] {
 			new NewCookie("sessionid", u.getSessionToken(), "/", null, null,
 					KeyshareConfiguration.getInstance().getSessionTimeout()*60,
