@@ -114,6 +114,19 @@ public class WebClientResource {
 	}
 
 	@GET
+	@Path("/users/{user_id}/test_email")
+	@Produces(MediaType.TEXT_PLAIN)
+	@RateLimit
+	public String getEmailTestJwt(@PathParam("user_id") int userID,
+	                              @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if(u == null)
+			return null;
+
+		return getEmailDisclosureJwt();
+	}
+
+	@GET
 	@Path("/users/{user_id}/issue_email")
 	@Produces(MediaType.TEXT_PLAIN)
 	@RateLimit
