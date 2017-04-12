@@ -24,12 +24,18 @@ public class EmailSender {
 		props.put("mail.smtp.port", "587");
 		props.put("mail.smtp.host", KeyshareConfiguration.getInstance().getMailHost());
 
-		Session session = Session.getInstance(props, new Authenticator() {
-			@Override protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(KeyshareConfiguration.getInstance().getMailUser(),
-						KeyshareConfiguration.getInstance().getMailPassword());
-			}
-		});
+		Session session = null;
+		if (KeyshareConfiguration.getInstance().getMailUser().length() > 0) {
+			session = Session.getInstance(props, new Authenticator() {
+				@Override
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(KeyshareConfiguration.getInstance().getMailUser(),
+							KeyshareConfiguration.getInstance().getMailPassword());
+				}
+			});
+		} else {
+			session = Session.getInstance(props);
+		}
 
 		try {
 			Message message = new MimeMessage(session);
