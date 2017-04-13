@@ -43,6 +43,8 @@ public class KeyshareConfiguration {
 	private String email_issuer = "";
 	private String email_credential = "";
 	private String email_attribute = "";
+	private String email_login_credential = "";
+	private String email_login_attribute = "";
 
 	private int session_timeout = 30;
 	private int rate_limit = 3;
@@ -128,6 +130,14 @@ public class KeyshareConfiguration {
 
 	public String getEmailAttribute() {
 		return email_attribute;
+	}
+
+	public String getEmailLoginCredential() {
+		return email_login_credential;
+	}
+
+	public String getEmailLoginAttribute() {
+		return email_login_attribute;
 	}
 
 	public int getSessionTimeout() {

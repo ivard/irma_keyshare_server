@@ -1,11 +1,10 @@
 package org.irmacard.keyshare.web;
 
 import com.google.gson.reflect.TypeToken;
-import org.irmacard.api.common.AttributeDisjunction;
-import org.irmacard.api.common.AttributeDisjunctionList;
-import org.irmacard.api.common.JwtParser;
+import org.irmacard.api.common.*;
 import org.irmacard.api.common.disclosure.DisclosureProofResult;
-import org.irmacard.api.common.ApiClient;
+import org.irmacard.api.common.issuing.IdentityProviderRequest;
+import org.irmacard.api.common.issuing.IssuingRequest;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
@@ -27,6 +26,8 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,8 +93,8 @@ public class WebClientResource {
 				new CredentialIdentifier(
 						conf.getSchemeManager(),
 						conf.getEmailIssuer(),
-						conf.getEmailCredential()),
-				conf.getEmailAttribute()
+						conf.getEmailLoginCredential()),
+				conf.getEmailLoginAttribute()
 		);
 	}
 
@@ -148,23 +149,45 @@ public class WebClientResource {
 		if(u == null)
 			return null;
 
-		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		ArrayList<CredentialRequest> credentials = new ArrayList<>(2);
 
-		HashMap<String,String> attrs = new HashMap<>();
-		attrs.put(KeyshareConfiguration.getInstance().getEmailAttribute(), u.getUsername());
+		// Add login credential with long expiry
+		HashMap<String,String> attrs = new HashMap<>(1);
+		attrs.put(conf.getEmailLoginAttribute(), u.getUsername());
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.YEAR, 5);
+		credentials.add(new CredentialRequest(
+				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
+				new CredentialIdentifier(
+						conf.getSchemeManager(),
+						conf.getEmailIssuer(),
+						conf.getEmailLoginCredential()
+				),
+				attrs
+		));
 
-		credentials.put(new CredentialIdentifier(
-				KeyshareConfiguration.getInstance().getSchemeManager(),
-				KeyshareConfiguration.getInstance().getEmailIssuer(),
-				KeyshareConfiguration.getInstance().getEmailCredential()
-		), attrs);
+		// Add normal email credential with normal expiry
+		attrs = new HashMap<>(1);
+		attrs.put(conf.getEmailAttribute(), u.getUsername());
+		calendar = Calendar.getInstance();
+		calendar.add(Calendar.YEAR, 1);
+		credentials.add(new CredentialRequest(
+				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
+				new CredentialIdentifier(
+					conf.getSchemeManager(),
+					conf.getEmailIssuer(),
+					conf.getEmailCredential()
+				),
+				attrs
+		));
 
-		return ApiClient.getIssuingJWT(credentials,
-				KeyshareConfiguration.getInstance().getServerName(),
-				KeyshareConfiguration.getInstance().getHumanReadableName(),
-				true,
-				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
-				KeyshareConfiguration.getInstance().getJwtPrivateKey()
+		IdentityProviderRequest ipRequest = new IdentityProviderRequest("", new IssuingRequest(null, null, credentials), 120);
+		return ApiClient.getSignedIssuingJWT(ipRequest,
+				conf.getServerName(),
+				conf.getHumanReadableName(),
+				conf.getJwtAlgorithm(),
+				conf.getJwtPrivateKey()
 		);
 	}
 
