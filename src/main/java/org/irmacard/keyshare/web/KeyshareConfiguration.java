@@ -46,6 +46,11 @@ public class KeyshareConfiguration {
 	private String email_login_credential = "";
 	private String email_login_attribute = "";
 
+	private String login_email_subject = "Log in on the keyshare server";
+	private String login_email_body = "Click on the link below to log in on the keyshare server.";
+	private String register_email_subject = "Verify your email address";
+	private String register_email_body = "To finish registering to the keyshare server, please click on the link below.";
+
 	private int session_timeout = 30;
 	private int rate_limit = 3;
 
@@ -138,6 +143,22 @@ public class KeyshareConfiguration {
 
 	public String getEmailLoginAttribute() {
 		return email_login_attribute;
+	}
+
+	public String getLoginEmailSubject() {
+		return login_email_subject;
+	}
+
+	public String getLoginEmailBody() {
+		return login_email_body;
+	}
+
+	public String getRegisterEmailSubject() {
+		return register_email_subject;
+	}
+
+	public String getRegisterEmailBody() {
+		return register_email_body;
 	}
 
 	public int getSessionTimeout() {

@@ -62,11 +62,12 @@ public class WebClientResource {
 		if(u == null)
 			throw new RuntimeException("User already exists?");
 
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		EmailVerifier.verifyEmail(
 				u.getUsername(),
-				"Verify your email address",
-				"To finish enrollment to the keyshare server, please click on the link below.",
-				KeyshareConfiguration.getInstance().getUrl() + "/#enroll/"
+				conf.getRegisterEmailSubject(),
+				conf.getRegisterEmailBody(),
+				conf.getUrl() + "/#enroll/"
 		);
 
 		return u.getAsMessage();
@@ -276,12 +277,13 @@ public class WebClientResource {
 		String email = user.getUsername();
 
 		if (User.count(User.USERNAME_FIELD + " = ?", email) != 0) {
+			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			logger.info("Sending OTP to {}", email);
 			EmailVerifier.verifyEmail(
 					email,
-					"Log in on keyshare server",
-					"Click on the link below to log in on the keyshare server.",
-					KeyshareConfiguration.getInstance().getUrl() + "/#login/",
+					conf.getLoginEmailSubject(),
+					conf.getLoginEmailBody(),
+					conf.getUrl() + "/#login/",
 					60 * 60 // 1 hour
 			);
 		} else {
