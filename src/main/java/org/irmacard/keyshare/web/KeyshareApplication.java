@@ -38,12 +38,12 @@ import org.irmacard.credentials.idemix.info.IdemixKeyStoreDeserializer;
 import org.irmacard.credentials.info.DescriptionStore;
 import org.irmacard.credentials.info.DescriptionStoreDeserializer;
 import org.irmacard.credentials.info.InfoException;
-import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.DatabaseRequestFilter;
 import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;
 import org.irmacard.keyshare.web.filters.RateLimitRequestFilter;
 import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
 import org.javalite.activejdbc.Base;
+import org.javalite.activejdbc.LogFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,8 +81,6 @@ public class KeyshareApplication extends ResourceConfig {
 
         register(ProveResource.class);
 
-        // TODO: The database really likes to be opened and closed on every thread to ensure
-        // no data is lost, at least when working with H2. These two 
         register(DatabaseRequestFilter.class);
         register(DatabaseResponseFilter.class);
         register(RateLimitRequestFilter.class);
@@ -90,7 +88,7 @@ public class KeyshareApplication extends ResourceConfig {
         register(WebClientResource.class);
 
         logger.info("Running keyshare application");
-        org.javalite.activejdbc.LogFilter.setLogExpression("a^");
+        LogFilter.setLogExpression("a^");
         openDatabase();
         closeDatabase();
     }
@@ -101,7 +99,7 @@ public class KeyshareApplication extends ResourceConfig {
             Base.open("java:comp/env/jdbc/irma_keyshare");
         }
     }
-    
+
     public static void closeDatabase() {
         Base.close();
     }
