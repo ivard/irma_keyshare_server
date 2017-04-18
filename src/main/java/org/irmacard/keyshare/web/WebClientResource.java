@@ -67,7 +67,7 @@ public class WebClientResource {
 				u.getUsername(),
 				conf.getRegisterEmailSubject(),
 				conf.getRegisterEmailBody(),
-				conf.getUrl() + "/#enroll/"
+				conf.getWebclientUrl() + "/#enroll/"
 		);
 
 		return u.getAsMessage();
@@ -283,7 +283,7 @@ public class WebClientResource {
 					email,
 					conf.getLoginEmailSubject(),
 					conf.getLoginEmailBody(),
-					conf.getUrl() + "/#login/",
+					conf.getWebclientUrl() + "/#login/",
 					60 * 60 // 1 hour
 			);
 		} else {

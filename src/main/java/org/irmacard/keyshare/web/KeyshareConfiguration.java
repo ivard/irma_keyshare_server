@@ -38,7 +38,7 @@ public class KeyshareConfiguration {
 	private String mail_from = "";
 	private int mail_port = 587;
 
-	private String server_url = "";
+	private String webclient_url = "";
 
 	private String scheme_manager = "";
 	private String email_issuer = "";
@@ -113,17 +113,12 @@ public class KeyshareConfiguration {
 		return mail_from;
 	}
 
-	public String getUrl() {
-		if (server_url.endsWith("/")) return server_url + "irma_keyshare_server";
-		else return server_url + "/irma_keyshare_server";
-	}
-
-	public String getApiUrl() {
-		return getUrl() + "/api";
+	public String getWebclientUrl() {
+		return webclient_url;
 	}
 
 	public boolean isHttpsEnabled() {
-		return server_url.startsWith("https://");
+		return webclient_url.startsWith("https://");
 	}
 
 	public String getSchemeManager() {
