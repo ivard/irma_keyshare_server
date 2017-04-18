@@ -60,7 +60,7 @@ public class WebClientResource {
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.register(user);
 		if(u == null)
-			throw new RuntimeException("User already exists?");
+			throw new KeyshareException(KeyshareError.USERNAME_UNAVAILABLE);
 
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		EmailVerifier.verifyEmail(
