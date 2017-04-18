@@ -19,13 +19,13 @@ public class EmailSender {
 			throw new AddressException("Invalid amount of (comma-separated) addresses given (should be 1)");
 
 		Properties props = new Properties();
-		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.port", KeyshareConfiguration.getInstance().getMailPort());
 		props.put("mail.smtp.host", KeyshareConfiguration.getInstance().getMailHost());
 
 		Session session = null;
 		if (KeyshareConfiguration.getInstance().getMailUser().length() > 0) {
+			props.put("mail.smtp.auth", "true");
 			session = Session.getInstance(props, new Authenticator() {
 				@Override
 				protected PasswordAuthentication getPasswordAuthentication() {

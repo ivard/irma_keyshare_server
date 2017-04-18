@@ -36,6 +36,7 @@ public class KeyshareConfiguration {
 	private String mail_password = "";
 	private String mail_host = "";
 	private String mail_from = "";
+	private int mail_port = 587;
 
 	private String server_url = "";
 
@@ -102,6 +103,10 @@ public class KeyshareConfiguration {
 
 	public String getMailHost() {
 		return mail_host;
+	}
+
+	public int getMailPort() {
+		return mail_port;
 	}
 
 	public String getMailFrom() {
