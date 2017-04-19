@@ -88,7 +88,6 @@ public class KeyshareApplication extends ResourceConfig {
         register(WebClientResource.class);
 
         logger.info("Running keyshare application");
-        LogFilter.setLogExpression("a^");
         openDatabase();
         closeDatabase();
     }
@@ -101,6 +100,7 @@ public class KeyshareApplication extends ResourceConfig {
     }
 
     public static void closeDatabase() {
+        logger.warn("Closing database connection");
         Base.close();
     }
 }
