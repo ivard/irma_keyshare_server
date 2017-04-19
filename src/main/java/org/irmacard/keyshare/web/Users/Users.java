@@ -6,6 +6,7 @@ import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -14,13 +15,14 @@ public class Users {
 
 	static private SecureRandom srnd = new SecureRandom();
 
+	@NotNull
 	static public User register(UserLoginMessage login) {
-		logger.info("Registring user with username {}", login.getUsername());
+		logger.info("Registering user with username {}", login.getUsername());
+
 		User u = getUser(login.getUsername());
-		if(u != null) {
-			// TODO: handle properly
+		if(u != null && u.isEnrolled()) {
 			logger.info("Username {} already registered", login.getUsername());
-			return null;
+			throw new KeyshareException(KeyshareError.USERNAME_UNAVAILABLE);
 		}
 
 		u = new User(login);

@@ -52,6 +52,15 @@ public class WebClientResource {
 		return getCookiePostResponse(u);
 	}
 
+	@GET @Path("/users/available/{username}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@RateLimit
+	public boolean isUsernameAvailable(@PathParam("username") String username) {
+		User u = Users.getUser(username);
+		return u == null || !u.isEnrolled();
+	}
+
 	// TODO Move this elsewhere? This is done by the app, not by the webclient
 	@POST @Path("/users/selfenroll")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -59,8 +68,6 @@ public class WebClientResource {
 	@RateLimit
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.register(user);
-		if(u == null)
-			throw new KeyshareException(KeyshareError.USERNAME_UNAVAILABLE);
 
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		EmailVerifier.verifyEmail(
