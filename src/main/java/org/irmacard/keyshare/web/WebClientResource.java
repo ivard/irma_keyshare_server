@@ -176,19 +176,21 @@ public class WebClientResource {
 		));
 
 		// Add normal email credential with normal expiry
-		attrs = new HashMap<>(1);
-		attrs.put(conf.getEmailAttribute(), u.getUsername());
-		calendar = Calendar.getInstance();
-		calendar.add(Calendar.YEAR, 1);
-		credentials.add(new CredentialRequest(
-				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
-				new CredentialIdentifier(
-					conf.getSchemeManager(),
-					conf.getEmailIssuer(),
-					conf.getEmailCredential()
-				),
-				attrs
-		));
+		if (!u.getEmailAddressIssued()) {
+			attrs = new HashMap<>(1);
+			attrs.put(conf.getEmailAttribute(), u.getUsername());
+			calendar = Calendar.getInstance();
+			calendar.add(Calendar.YEAR, 1);
+			credentials.add(new CredentialRequest(
+					(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
+					new CredentialIdentifier(
+							conf.getSchemeManager(),
+							conf.getEmailIssuer(),
+							conf.getEmailCredential()
+					),
+					attrs
+			));
+		}
 
 		IdentityProviderRequest ipRequest = new IdentityProviderRequest("", new IssuingRequest(null, null, credentials), 120);
 		return ApiClient.getSignedIssuingJWT(ipRequest,

@@ -43,7 +43,6 @@ import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;
 import org.irmacard.keyshare.web.filters.RateLimitRequestFilter;
 import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
 import org.javalite.activejdbc.Base;
-import org.javalite.activejdbc.LogFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
