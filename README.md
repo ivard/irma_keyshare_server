@@ -30,4 +30,4 @@ The following describes the API offered by the server to an IRMA client.
 
 ### Register
 
-Before using the server can used for any IRMA protocols, a client needs to register itself with the server.
+Before the server can be used for any IRMA protocols, a client needs to register itself with the server.
