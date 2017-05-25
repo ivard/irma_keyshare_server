@@ -19,7 +19,6 @@ import java.util.List;
 @Path("v1/prove")
 public class ProveResource {
 	public static final String JWT_SUBJECT = "ProofP";
-	private static final int PROOF_JWT_EXPIRY = 60; // one minute
 
 	private static Logger logger = LoggerFactory.getLogger(ProveResource.class);
 
@@ -59,6 +58,6 @@ public class ProveResource {
 		logger.info("Gotten challenge for user: {}", username);
 
 		ProofP proof = u.buildProofP(challenge);
-		return BaseVerifier.getSignedJWT("ProofP", proof, JWT_SUBJECT, PROOF_JWT_EXPIRY);
+		return BaseVerifier.getSignedJWT("ProofP", proof, JWT_SUBJECT);
 	}
 }

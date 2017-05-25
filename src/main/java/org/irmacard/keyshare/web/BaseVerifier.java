@@ -30,6 +30,10 @@ public class BaseVerifier {
 
 	public static final String[] authOptions = {"pin"};
 
+	protected static String getSignedJWT(String key, Object object, String subject) {
+		return getSignedJWT(key, object, subject, 0);
+	}
+
 	protected static String getSignedJWT(String key, Object object, String subject, int expiry) {
 		return Jwts.builder()
 				.setPayload(getJwtClaims(key, object, subject, expiry))
@@ -45,9 +49,10 @@ public class BaseVerifier {
 		HashMap<String, Object> claims = new HashMap<>(4);
 		claims.put(key, object);
 		claims.put("iat", System.currentTimeMillis()/1000);
-		claims.put("exp", System.currentTimeMillis()/1000 + expiry);
 		claims.put("iss", JWT_ISSUER);
 		claims.put("sub", subject);
+		if (expiry > 0)
+			claims.put("exp", System.currentTimeMillis()/1000 + expiry);
 
 		return GsonUtil.getGson().toJson(claims);
 	}
