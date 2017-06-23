@@ -19,7 +19,7 @@ public class EmailSender {
 			throw new AddressException("Invalid amount of (comma-separated) addresses given (should be 1)");
 
 		Properties props = new Properties();
-		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.starttls.required", "true");
 		props.put("mail.smtp.port", KeyshareConfiguration.getInstance().getMailPort());
 		props.put("mail.smtp.host", KeyshareConfiguration.getInstance().getMailHost());
 
