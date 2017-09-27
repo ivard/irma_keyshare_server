@@ -6,4 +6,5 @@ bin
 .settings/
 .idea/
 *.iml
-src/main/webapp
+src/main/webapp/*
+!src/main/webapp/WEB-INF

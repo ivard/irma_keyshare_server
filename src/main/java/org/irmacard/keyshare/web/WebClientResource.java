@@ -31,7 +31,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-@Path("v1/web")
+@Path("web")
 public class WebClientResource {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 

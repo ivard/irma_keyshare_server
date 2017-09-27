@@ -19,7 +19,7 @@ import java.util.HashMap;
  * by the keyshare server). It contains helpers to issue these JWT's and to verify them.
  *
  */
-@Path("v1/users")
+@Path("users")
 public class BaseVerifier {
 	private static Logger logger = LoggerFactory.getLogger(BaseVerifier.class);
 

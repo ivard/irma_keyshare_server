@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import java.math.BigInteger;
 import java.util.List;
 
-@Path("v1/prove")
+@Path("prove")
 public class ProveResource {
 	public static final String JWT_SUBJECT = "ProofP";
 
