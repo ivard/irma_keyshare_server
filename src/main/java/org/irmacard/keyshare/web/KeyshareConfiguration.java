@@ -51,6 +51,8 @@ public class KeyshareConfiguration {
 	private String login_email_body = "Click on the link below to log in on the keyshare server.";
 	private String register_email_subject = "Verify your email address";
 	private String register_email_body = "To finish registering to the keyshare server, please click on the link below.";
+	private String double_registration_email_subject = "Someone tried to re-register this email address";
+	private String double_registration_email_body = "Someone tried to re-register this email address. Was this you? If so, you first need to unregister. If this wasn't you, you can ignore this message.";
 
 	private int session_timeout = 30;
 	private int rate_limit = 3;
@@ -159,6 +161,14 @@ public class KeyshareConfiguration {
 
 	public String getRegisterEmailBody() {
 		return register_email_body;
+	}
+
+	public String getDoubleRegistrationEmailSubject() {
+		return double_registration_email_subject;
+	}
+
+	public String getDoubleRegistrationEmailBody() {
+		return double_registration_email_body;
 	}
 
 	public int getSessionTimeout() {

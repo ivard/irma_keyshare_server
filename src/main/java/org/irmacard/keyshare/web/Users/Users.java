@@ -22,7 +22,7 @@ public class Users {
 		User u = getUser(login.getUsername());
 		if(u != null && u.isEnrolled()) {
 			logger.info("Username {} already registered", login.getUsername());
-			throw new KeyshareException(KeyshareError.USERNAME_UNAVAILABLE);
+			return u;
 		}
 
 		u = new User(login);

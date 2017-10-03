@@ -11,6 +11,7 @@ import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.email.EmailSender;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.RateLimit;
 import org.irmacard.keyshare.web.users.User;
@@ -57,8 +58,7 @@ public class WebClientResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@RateLimit
 	public boolean isUsernameAvailable(@PathParam("username") String username) {
-		User u = Users.getUser(username);
-		return u == null || !u.isEnrolled();
+		return true;
 	}
 
 	// TODO Move this elsewhere? This is done by the app, not by the webclient
@@ -67,17 +67,26 @@ public class WebClientResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@RateLimit
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
-		User u = Users.register(user);
+		User u = Users.getUser(user.getUsername());
+		if (u == null || !u.isEnrolled()) {
+			u = Users.register(user);
+			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+			EmailVerifier.verifyEmail(
+					u.getUsername(),
+					conf.getRegisterEmailSubject(),
+					conf.getRegisterEmailBody(),
+					conf.getWebclientUrl() + "/#enroll/"
+			);
+		} else {
+			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+			EmailSender.send(
+					u.getUsername(),
+					conf.getDoubleRegistrationEmailSubject(),
+					conf.getDoubleRegistrationEmailBody()
+			);
+		}
 
-		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
-		EmailVerifier.verifyEmail(
-				u.getUsername(),
-				conf.getRegisterEmailSubject(),
-				conf.getRegisterEmailBody(),
-				conf.getWebclientUrl() + "/#enroll/"
-		);
-
-		return u.getAsMessage();
+		return new UserMessage();
 	}
 
 	@GET
