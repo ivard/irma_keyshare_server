@@ -2,6 +2,18 @@
 <!-- This web.xml file is not required when using Servlet 3.0 container,
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <filter>
+	 <filter-name>prometheusFilter</filter-name>
+      <filter-class>io.prometheus.client.filter.MetricsFilter</filter-class>
+	  <init-param>
+		<param-name>metric-name</param-name>
+		<param-value>irma_keyshare_metricsfilter</param-value>
+	  </init-param>
+	</filter>
+	<filter-mapping>
+	  <filter-name>prometheusFilter</filter-name>
+	  <url-pattern>/*</url-pattern>
+	</filter-mapping>
     <servlet>
         <servlet-name>irma_keyshare_server</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
@@ -36,4 +48,12 @@
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
     </resource-ref>
+	<servlet>
+        <servlet-name>prometheusexporter</servlet-name>
+        <servlet-class>io.prometheus.client.exporter.MetricsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>prometheusexporter</servlet-name>
+        <url-pattern>/metrics/*</url-pattern>
+    </servlet-mapping>
 </web-app>
