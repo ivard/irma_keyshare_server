@@ -69,6 +69,7 @@ public class WebClientResource {
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.getUser(user.getUsername());
 		if (u == null || !u.isEnrolled()) {
+            Historian.getInstance().recordRegistration(false);
 			u = Users.register(user);
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			EmailVerifier.verifyEmail(
@@ -78,6 +79,7 @@ public class WebClientResource {
 					conf.getWebclientUrl() + "/#enroll/"
 			);
 		} else {
+            Historian.getInstance().recordRegistration(true);
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			EmailSender.send(
 					u.getUsername(),
@@ -126,9 +128,12 @@ public class WebClientResource {
 		parser.parseJwt(jwt);
 
 		Map<AttributeIdentifier, String> attrs = parser.getPayload();
-		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status")))
+		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status"))) {
+            Historian.getInstance().recordLogin(false, false);
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
+        }
 
+        Historian.getInstance().recordLogin(true, false);
 		return login(attrs.get(getEmailAttributeIdentifier()));
 	}
 
@@ -236,6 +241,7 @@ public class WebClientResource {
 			return null;
 		}
 
+        Historian.getInstance().recordUnregistration();
 		logger.warn("Unregistering user {}", u.getUsername());
 		u.unregister();
 
@@ -273,11 +279,19 @@ public class WebClientResource {
 	@Path("/enroll/{token}")
 	@RateLimit
 	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
-		String email = EmailVerifier.getVerifiedAddress(token);
-		if (email == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
-		return login(email);
+        Historian.getInstance().recordEmailVerified();
+        return loginWithToken(token, true);
 	}
+
+    private Response loginWithToken(String token, boolean inEnrollment) {
+		String email = EmailVerifier.getVerifiedAddress(token);
+		if (email == null) {
+            Historian.getInstance().recordLogin(false, true);
+			return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        Historian.getInstance().recordLogin(true, true);
+		return login(email);
+    }
 
 	private Response login(String email) {
 		User user = Users.getValidUser(email);
@@ -317,7 +331,7 @@ public class WebClientResource {
 	@Path("/login/{token}")
 	@RateLimit
 	public Response oneTimePasswordLogin(@PathParam("token") String token) throws URISyntaxException {
-		return enroll(token);
+		return loginWithToken(token, false);
 	}
 
 	@GET

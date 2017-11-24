@@ -3,5 +3,15 @@
 
     // Expiry for the pin JWT (i.e., how long a user stays authenticated
     // without having to enter her pin)
-    "pinExpiry": 900
+    "pinExpiry": 900,
+
+    // When events_webhook_uri is set to an URI, the server will periodically
+    // send an HTTP POST request to it with details like to login attempts.
+    // See github.com/privacybydesign/irma-historyd for an example of a
+    // webserver collecting the data send out by this webhook.
+    "events_webhook_uri": null,
+
+    // Optional basic HTTP authorization token to be included in the
+    // webhook POST request set by events_webook_uri
+    "events_webhook_authorizationToken": null
 }

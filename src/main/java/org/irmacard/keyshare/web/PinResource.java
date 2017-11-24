@@ -37,10 +37,12 @@ public class PinResource extends BaseVerifier {
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
 		if(!u.checkAndCountPin(msg.getPin())) {
-			if (!u.isPinBlocked())
+			if (!u.isPinBlocked()) {
 				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
-			else
+            } else {
+                Historian.getInstance().recordPinBlocked();
 				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
+            }
 		} else {
 			String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
 					KeyshareConfiguration.getInstance().getPinExpiry());
