@@ -19,9 +19,11 @@ import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.mail.internet.AddressException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -35,6 +37,9 @@ import java.util.Map;
 @Path("web")
 public class WebClientResource {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	@Context
+	private HttpServletRequest servletRequest;
 
 	@GET
 	@Path("/users/{user_id}")
@@ -69,7 +74,7 @@ public class WebClientResource {
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.getUser(user.getUsername());
 		if (u == null || !u.isEnrolled()) {
-            Historian.getInstance().recordRegistration(false);
+            Historian.getInstance().recordRegistration(false, servletRequest.getRemoteAddr());
 			u = Users.register(user);
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			EmailVerifier.verifyEmail(
@@ -79,7 +84,7 @@ public class WebClientResource {
 					conf.getWebclientUrl() + "/#enroll/"
 			);
 		} else {
-            Historian.getInstance().recordRegistration(true);
+            Historian.getInstance().recordRegistration(true, servletRequest.getRemoteAddr());
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			EmailSender.send(
 					u.getUsername(),
@@ -129,11 +134,11 @@ public class WebClientResource {
 
 		Map<AttributeIdentifier, String> attrs = parser.getPayload();
 		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status"))) {
-            Historian.getInstance().recordLogin(false, false);
+            Historian.getInstance().recordLogin(false, false, servletRequest.getRemoteAddr());
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
         }
 
-        Historian.getInstance().recordLogin(true, false);
+        Historian.getInstance().recordLogin(true, false, servletRequest.getRemoteAddr());
 		return login(attrs.get(getEmailAttributeIdentifier()));
 	}
 
@@ -241,7 +246,7 @@ public class WebClientResource {
 			return null;
 		}
 
-        Historian.getInstance().recordUnregistration();
+        Historian.getInstance().recordUnregistration(servletRequest.getRemoteAddr());
 		logger.warn("Unregistering user {}", u.getUsername());
 		u.unregister();
 
@@ -279,17 +284,17 @@ public class WebClientResource {
 	@Path("/enroll/{token}")
 	@RateLimit
 	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
-        Historian.getInstance().recordEmailVerified();
+        Historian.getInstance().recordEmailVerified(servletRequest.getRemoteAddr());
         return loginWithToken(token, true);
 	}
 
     private Response loginWithToken(String token, boolean inEnrollment) {
 		String email = EmailVerifier.getVerifiedAddress(token);
 		if (email == null) {
-            Historian.getInstance().recordLogin(false, true);
+            Historian.getInstance().recordLogin(false, true, servletRequest.getRemoteAddr());
 			return Response.status(Response.Status.NOT_FOUND).build();
         }
-        Historian.getInstance().recordLogin(true, true);
+        Historian.getInstance().recordLogin(true, true, servletRequest.getRemoteAddr());
 		return login(email);
     }
 

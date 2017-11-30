@@ -43,11 +43,13 @@ public class Historian implements Runnable {
     }
     private class LoginEvent extends Event{
         public Date When;
+        public String IP;
         public boolean Success;
         public boolean WithOTP;
 
-        public LoginEvent(Date When, boolean Success, boolean WithOTP) {
+        public LoginEvent(Date When, boolean Success, boolean WithOTP, String IP) {
             this.When = When; this.Success = Success; this.WithOTP = WithOTP;
+            this.IP = IP;
         }
         @Override public void AddToRequest(SubmitRequest req) {
             req.Logins.add(this);
@@ -55,10 +57,11 @@ public class Historian implements Runnable {
     }
     private class RegistrationEvent extends Event {
         public Date When;
+        public String IP;
         public boolean Double;
 
-        public RegistrationEvent(Date When, boolean Double)  {
-            this.When = When; this.Double = Double;
+        public RegistrationEvent(Date When, boolean Double, String IP)  {
+            this.When = When; this.Double = Double; this.IP = IP;
         }
         @Override public void AddToRequest(SubmitRequest req) {
             req.Registrations.add(this);
@@ -66,9 +69,10 @@ public class Historian implements Runnable {
     }
     private class EmailVerifiedEvent extends Event {
         public Date When;
+        public String IP;
 
-        public EmailVerifiedEvent(Date When) {
-            this.When = When;
+        public EmailVerifiedEvent(Date When, String IP) {
+            this.When = When; this.IP = IP;
         }
         @Override public void AddToRequest(SubmitRequest req) {
             req.EmailsVerified.add(this);
@@ -76,9 +80,10 @@ public class Historian implements Runnable {
     }
     private class UnregistrationEvent extends Event {
         public Date When;
+        public String IP;
 
-        public UnregistrationEvent(Date When) {
-            this.When = When;
+        public UnregistrationEvent(Date When, String IP) {
+            this.When = When; this.IP = IP;
         }
         @Override public void AddToRequest(SubmitRequest req) {
             req.Unregistrations.add(this);
@@ -86,9 +91,10 @@ public class Historian implements Runnable {
     }
     private class PinBlockedEvent extends Event {
         public Date When;
+        public String IP;
 
-        public PinBlockedEvent(Date When) {
-            this.When = When;
+        public PinBlockedEvent(Date When, String IP) {
+            this.When = When; this.IP = IP;
         }
         @Override public void AddToRequest(SubmitRequest req) {
             req.PinsBlocked.add(this);
@@ -237,60 +243,60 @@ public class Historian implements Runnable {
         thread.start();
     }
 
-    public void recordLogin(boolean success, boolean withOTP) {
+    public void recordLogin(boolean success, boolean withOTP, String ip) {
         if (!this.enabled)
             return;
         this.lock.lock();
         try {
-            events.add(new LoginEvent(new Date(), success, withOTP));
+            events.add(new LoginEvent(new Date(), success, withOTP, ip));
             this.cond.signal();
         } finally {
             this.lock.unlock();
         }
     }
 
-    public void recordRegistration(boolean doubleRegistration) {
+    public void recordRegistration(boolean doubleRegistration, String ip) {
         if (!this.enabled)
             return;
         this.lock.lock();
         try {
-            events.add(new RegistrationEvent(new Date(), doubleRegistration));
+            events.add(new RegistrationEvent(new Date(), doubleRegistration, ip));
             this.cond.signal();
         } finally {
             this.lock.unlock();
         }
     }
 
-    public void recordEmailVerified() {
+    public void recordEmailVerified(String ip) {
         if (!this.enabled)
             return;
         this.lock.lock();
         try {
-            events.add(new EmailVerifiedEvent(new Date()));
+            events.add(new EmailVerifiedEvent(new Date(), ip));
             this.cond.signal();
         } finally {
             this.lock.unlock();
         }
     }
 
-    public void recordPinBlocked() {
+    public void recordPinBlocked(String ip) {
         if (!this.enabled)
             return;
         this.lock.lock();
         try {
-            events.add(new PinBlockedEvent(new Date()));
+            events.add(new PinBlockedEvent(new Date(), ip));
             this.cond.signal();
         } finally {
             this.lock.unlock();
         }
     }
 
-    public void recordUnregistration() {
+    public void recordUnregistration(String ip) {
         if (!this.enabled)
             return;
         this.lock.lock();
         try {
-            events.add(new UnregistrationEvent(new Date()));
+            events.add(new UnregistrationEvent(new Date(), ip));
             this.cond.signal();
         } finally {
             this.lock.unlock();
