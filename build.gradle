@@ -34,6 +34,9 @@ dependencies {
     compile 'io.jsonwebtoken:jjwt:0.6.0'
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
 
+    compile 'io.prometheus:simpleclient:0.1.0'
+    compile 'io.prometheus:simpleclient_servlet:0.1.0'
+
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
     compile 'org.irmacard.credentials:credentials_api:0.18.1'
