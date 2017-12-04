@@ -62,6 +62,9 @@ public class KeyshareConfiguration {
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
+    String events_webhook_uri = null;
+    String events_webhook_authorizationToken = null;
+
 	public KeyshareConfiguration() {}
 
 	/**

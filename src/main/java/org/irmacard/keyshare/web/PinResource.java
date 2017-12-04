@@ -15,9 +15,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Context;
+import javax.servlet.http.HttpServletRequest;
 
 public class PinResource extends BaseVerifier {
 	private static Logger logger = LoggerFactory.getLogger(PinResource.class);
+
+    @Context
+    private HttpServletRequest servletRequest;
 
 	@POST
 	@Path("/verify/pin")
@@ -37,10 +42,12 @@ public class PinResource extends BaseVerifier {
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
 		if(!u.checkAndCountPin(msg.getPin())) {
-			if (!u.isPinBlocked())
+			if (!u.isPinBlocked()) {
 				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
-			else
+            } else {
+                Historian.getInstance().recordPinBlocked(servletRequest.getRemoteAddr());
 				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
+            }
 		} else {
 			String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
 					KeyshareConfiguration.getInstance().getPinExpiry());
