@@ -13,5 +13,9 @@
 
     // Optional basic HTTP authorization token to be included in the
     // webhook POST request set by events_webook_uri
-    "events_webhook_authorizationToken": null
+    "events_webhook_authorizationToken": null,
+
+    // If set, periodically checks schememanager at the given URI and
+    // downloads updates.
+    "schemeManager_update_uri": "https://privacybydesign.foundation/schememanager/pbdf"
 }

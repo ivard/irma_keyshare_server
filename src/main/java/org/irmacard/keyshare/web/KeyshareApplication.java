@@ -38,6 +38,7 @@ import org.irmacard.credentials.idemix.info.IdemixKeyStoreDeserializer;
 import org.irmacard.credentials.info.DescriptionStore;
 import org.irmacard.credentials.info.DescriptionStoreDeserializer;
 import org.irmacard.credentials.info.InfoException;
+import org.irmacard.credentials.info.updater.Updater;
 import org.irmacard.keyshare.web.filters.DatabaseRequestFilter;
 import org.irmacard.keyshare.web.filters.DatabaseResponseFilter;
 import org.irmacard.keyshare.web.filters.RateLimitRequestFilter;
@@ -45,10 +46,16 @@ import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
 import org.javalite.activejdbc.Base;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
 
 import javax.ws.rs.ApplicationPath;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationPath("/")
 public class KeyshareApplication extends ResourceConfig {
@@ -57,15 +64,19 @@ public class KeyshareApplication extends ResourceConfig {
     public static final String VERSION2 = "irma_keyshare2_server";
 
     public KeyshareApplication() {
-        try {
-            if (!DescriptionStore.isInitialized() || !IdemixKeyStore.isInitialized()) {
-                URI CORE_LOCATION = KeyshareApplication.class.getClassLoader().getResource("/irma_configuration/").toURI();
-                DescriptionStore.initialize(new DescriptionStoreDeserializer(CORE_LOCATION));
-                IdemixKeyStore.initialize(new IdemixKeyStoreDeserializer(CORE_LOCATION));
+        Security.addProvider(new BouncyCastleProvider()); // TODO move to Updater class?
+        KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+
+        if (!DescriptionStore.isInitialized() || !IdemixKeyStore.isInitialized()) {
+            loadOrUpdateIrmaConfiguration(true);
+
+            if (conf.schemeManager_update_uri != null) {
+                BackgroundJobManager.getScheduler().scheduleAtFixedRate(new Runnable() {
+                    @Override public void run() {
+                        loadOrUpdateIrmaConfiguration(false);
+                    }
+                }, 1, 1, TimeUnit.HOURS);
             }
-        } catch (URISyntaxException|InfoException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
         }
 
         // register Gson
@@ -89,7 +100,6 @@ public class KeyshareApplication extends ResourceConfig {
         register(WebClientResource.class);
 
         // Enable the Historian class, if an events webhook is set.
-        KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
         if (conf.events_webhook_uri != null) {
             Historian.getInstance().enable(
                     conf.events_webhook_uri,
@@ -100,6 +110,40 @@ public class KeyshareApplication extends ResourceConfig {
         openDatabase();
         closeDatabase();
     }
+
+    private void loadOrUpdateIrmaConfiguration(boolean initial) {
+        KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+        URI CORE_LOCATION;
+        try {
+            CORE_LOCATION = KeyshareApplication.class.getClassLoader().getResource("/irma_configuration/").toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        boolean updated = false;
+
+        if (conf.schemeManager_update_uri != null) {
+            logger.info("Updating irma_configuration from {} ...",
+                    conf.schemeManager_update_uri);
+            try {
+                updated = Updater.Update(
+                        conf.schemeManager_update_uri,
+                        Paths.get(CORE_LOCATION).toString(),
+                        conf.getSchemeManagerPublicKeyString());
+            } catch(Exception e) {
+                logger.error("Update failed:", e);
+            }
+        }
+
+        try {
+            if (initial || updated) {
+                DescriptionStore.initialize(new DescriptionStoreDeserializer(CORE_LOCATION));
+                IdemixKeyStore.initialize(new IdemixKeyStoreDeserializer(CORE_LOCATION));
+            }
+        } catch (Exception e) {
+            logger.error("Store initialization failed:", e);
+        }
+    }
+
 
     public static void openDatabase() {
         if(!Base.hasConnection()) {
