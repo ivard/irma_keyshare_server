@@ -14,14 +14,25 @@ import java.util.concurrent.TimeUnit;
 @WebListener
 public class BackgroundJobManager implements ServletContextListener {
 	private static Logger logger = LoggerFactory.getLogger(BackgroundJobManager.class);
-	private ScheduledExecutorService scheduler;
+	static private ScheduledExecutorService scheduler;
+
+    public static ScheduledExecutorService getScheduler() {
+        if (scheduler == null) {
+            synchronized (BackgroundJobManager.class) {
+                if (scheduler == null) {
+                    scheduler = Executors.newScheduledThreadPool(2);
+                }
+            }
+        }
+        return scheduler;
+    }
 
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
 		logger.info("Setting up database cleanup cron task");
-		scheduler = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService sched = getScheduler();
 
-		scheduler.scheduleAtFixedRate(new Runnable() {
+		sched.scheduleAtFixedRate(new Runnable() {
 			@Override public void run() {
 				try {
 					logger.warn("Deleting expired email verifications");
@@ -42,6 +53,6 @@ public class BackgroundJobManager implements ServletContextListener {
 
 	@Override
 	public void contextDestroyed(ServletContextEvent event) {
-		scheduler.shutdownNow();
+		getScheduler().shutdownNow();
 	}
 }
