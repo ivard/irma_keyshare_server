@@ -9,10 +9,14 @@
 		<param-name>metric-name</param-name>
 		<param-value>irma_keyshare_metricsfilter</param-value>
 	  </init-param>
+      <init-param>
+		<param-name>path-components</param-name>
+		<param-value>5</param-value>
+	  </init-param>
 	</filter>
 	<filter-mapping>
 	  <filter-name>prometheusFilter</filter-name>
-	  <url-pattern>/*</url-pattern>
+	  <url-pattern>/api/*</url-pattern>
 	</filter-mapping>
     <servlet>
         <servlet-name>irma_keyshare_server</servlet-name>
