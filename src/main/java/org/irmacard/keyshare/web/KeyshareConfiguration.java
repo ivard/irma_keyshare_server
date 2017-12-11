@@ -16,6 +16,7 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import javax.servlet.http.HttpServletRequest;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class KeyshareConfiguration {
@@ -56,6 +57,8 @@ public class KeyshareConfiguration {
 
 	private int session_timeout = 30;
 	private int rate_limit = 3;
+
+    private String client_ip_header = null;
 
 	private String apiserver_publickey = "apiserver.der";
 
@@ -284,4 +287,15 @@ public class KeyshareConfiguration {
 	public SignatureAlgorithm getJwtAlgorithm() {
 		return SignatureAlgorithm.RS256;
 	}
+
+    public String getClientIp(HttpServletRequest req) {
+        String ret;
+        if (this.client_ip_header != null) {
+            ret = req.getHeader(this.client_ip_header);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        return req.getRemoteAddr();
+    }
 }
