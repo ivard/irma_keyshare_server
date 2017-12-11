@@ -32,7 +32,7 @@ public class RateLimitRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
-        KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		int limit = conf.getRateLimit();
 		if (limit == 0)
 			return;

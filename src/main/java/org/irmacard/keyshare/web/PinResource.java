@@ -21,8 +21,8 @@ import javax.servlet.http.HttpServletRequest;
 public class PinResource extends BaseVerifier {
 	private static Logger logger = LoggerFactory.getLogger(PinResource.class);
 
-    @Context
-    private HttpServletRequest servletRequest;
+	@Context
+	private HttpServletRequest servletRequest;
 
 	@POST
 	@Path("/verify/pin")
@@ -44,10 +44,10 @@ public class PinResource extends BaseVerifier {
 		if(!u.checkAndCountPin(msg.getPin())) {
 			if (!u.isPinBlocked()) {
 				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
-            } else {
-                Historian.getInstance().recordPinBlocked(KeyshareConfiguration.getInstance().getClientIp(servletRequest));
+			} else {
+				Historian.getInstance().recordPinBlocked(KeyshareConfiguration.getInstance().getClientIp(servletRequest));
 				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
-            }
+			}
 		} else {
 			String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
 					KeyshareConfiguration.getInstance().getPinExpiry());

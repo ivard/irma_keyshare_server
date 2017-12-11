@@ -288,14 +288,14 @@ public class KeyshareConfiguration {
 		return SignatureAlgorithm.RS256;
 	}
 
-    public String getClientIp(HttpServletRequest req) {
-        String ret;
-        if (this.client_ip_header != null) {
-            ret = req.getHeader(this.client_ip_header);
-            if (ret != null) {
-                return ret;
-            }
-        }
-        return req.getRemoteAddr();
-    }
+	public String getClientIp(HttpServletRequest req) {
+		String ret;
+		if (this.client_ip_header != null) {
+			ret = req.getHeader(this.client_ip_header);
+			if (ret != null) {
+				return ret;
+			}
+		}
+		return req.getRemoteAddr();
+	}
 }

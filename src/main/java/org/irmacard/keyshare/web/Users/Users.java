@@ -97,7 +97,7 @@ public class Users {
 		return User.findFirst("ID = ?", user_id);
 	}
 
-    public static String randomSessionToken() {
-        return new BigInteger(260, srnd).toString(32);
-    }
+	public static String randomSessionToken() {
+		return new BigInteger(260, srnd).toString(32);
+	}
 }
