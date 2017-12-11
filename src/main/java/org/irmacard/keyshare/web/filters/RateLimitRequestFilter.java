@@ -32,11 +32,12 @@ public class RateLimitRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
-		int limit = KeyshareConfiguration.getInstance().getRateLimit();
+        KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		int limit = conf.getRateLimit();
 		if (limit == 0)
 			return;
 
-		String ip = servletRequest.getRemoteAddr();
+		String ip = conf.getClientIp(servletRequest);
 		String path = servletRequest.getPathInfo();
 		Long time = System.currentTimeMillis();
 

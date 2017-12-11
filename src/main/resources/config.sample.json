@@ -13,5 +13,9 @@
 
     // Optional basic HTTP authorization token to be included in the
     // webhook POST request set by events_webook_uri
-    "events_webhook_authorizationToken": null
+    "events_webhook_authorizationToken": null,
+
+    // Optional header that stores the client IP address.
+    // I.e. "X-Forwarded-For"
+    "client_ip_header": "X-Forwarded-For"
 }

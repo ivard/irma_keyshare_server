@@ -45,7 +45,7 @@ public class PinResource extends BaseVerifier {
 			if (!u.isPinBlocked()) {
 				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
             } else {
-                Historian.getInstance().recordPinBlocked(servletRequest.getRemoteAddr());
+                Historian.getInstance().recordPinBlocked(KeyshareConfiguration.getInstance().getClientIp(servletRequest));
 				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
             }
 		} else {
