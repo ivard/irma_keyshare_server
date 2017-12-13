@@ -111,7 +111,7 @@ public class User extends Model {
 	}
 
 	public boolean isEnrolled() {
-		return getBoolean(ENROLLED_FIELD);
+		return !KeyshareConfiguration.getInstance().getCheckUserEnrolled() || getBoolean(ENROLLED_FIELD);
 	}
 
 	public void setEnrolled(boolean enrolled) {

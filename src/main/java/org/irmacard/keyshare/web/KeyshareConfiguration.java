@@ -37,6 +37,7 @@ public class KeyshareConfiguration {
 	private String mail_password = "";
 	private String mail_host = "";
 	private String mail_from = "";
+	private boolean mail_starttls_required = true;
 	private int mail_port = 587;
 
 	private String webclient_url = "";
@@ -54,6 +55,8 @@ public class KeyshareConfiguration {
 	private String register_email_body = "To finish registering to the keyshare server, please click on the link below.";
 	private String double_registration_email_subject = "Someone tried to re-register this email address";
 	private String double_registration_email_body = "Someone tried to re-register this email address. Was this you? If so, you first need to unregister. If this wasn't you, you can ignore this message.";
+
+	private boolean check_user_enrolled = true;
 
 	private int session_timeout = 30;
 	private int rate_limit = 3;
@@ -112,6 +115,8 @@ public class KeyshareConfiguration {
 	public String getMailHost() {
 		return mail_host;
 	}
+
+	public boolean getStarttlsRequired() { return mail_starttls_required; }
 
 	public int getMailPort() {
 		return mail_port;
@@ -176,6 +181,8 @@ public class KeyshareConfiguration {
 	public String getDoubleRegistrationEmailBody() {
 		return double_registration_email_body;
 	}
+
+	public boolean getCheckUserEnrolled() { return check_user_enrolled; }
 
 	public int getSessionTimeout() {
 		return session_timeout;
