@@ -38,7 +38,7 @@ public class PinResource extends BaseVerifier {
 			u.addLog(LogEntryType.PIN_CHECK_REFUSED);
 			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
-		if (!u.isEnrolled())
+		if(!u.isEnrolled())
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
 		if(!u.checkAndCountPin(msg.getPin())) {

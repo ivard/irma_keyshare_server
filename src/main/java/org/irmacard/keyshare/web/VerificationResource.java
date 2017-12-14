@@ -38,7 +38,7 @@ public class VerificationResource extends BaseVerifier {
 			u.addLog(LogEntryType.IRMA_APP_AUTH_REFUSED);
 			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
-		if (!u.isEnrolled()) {
+		if(!u.isEnrolled()) {
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 		}
 
