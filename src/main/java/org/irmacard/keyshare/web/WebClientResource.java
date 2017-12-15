@@ -73,10 +73,10 @@ public class WebClientResource {
 	@RateLimit
 	public UserMessage userSelfEnroll(UserLoginMessage user) throws AddressException {
 		User u = Users.getUser(user.getUsername());
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		if (u == null || !u.isEnrolled()) {
-            Historian.getInstance().recordRegistration(false, servletRequest.getRemoteAddr());
+			Historian.getInstance().recordRegistration(false, conf.getClientIp(servletRequest));
 			u = Users.register(user);
-			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			EmailVerifier.verifyEmail(
 					u.getUsername(),
 					conf.getRegisterEmailSubject(),
@@ -84,8 +84,7 @@ public class WebClientResource {
 					conf.getWebclientUrl() + "/#enroll/"
 			);
 		} else {
-            Historian.getInstance().recordRegistration(true, servletRequest.getRemoteAddr());
-			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+			Historian.getInstance().recordRegistration(true, conf.getClientIp(servletRequest));
 			EmailSender.send(
 					u.getUsername(),
 					conf.getDoubleRegistrationEmailSubject(),
@@ -126,6 +125,7 @@ public class WebClientResource {
 	@Path("/login-irma/proof")
 	@RateLimit
 	public Response loginUsingEmailAttribute(String jwt) {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
 		JwtParser<Map<AttributeIdentifier, String>> parser
 				= new JwtParser<>(t, false, 10*1000, "disclosure_result", "attributes");
@@ -134,11 +134,11 @@ public class WebClientResource {
 
 		Map<AttributeIdentifier, String> attrs = parser.getPayload();
 		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status"))) {
-            Historian.getInstance().recordLogin(false, false, servletRequest.getRemoteAddr());
+			Historian.getInstance().recordLogin(false, false, conf.getClientIp(servletRequest));
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
-        }
+		}
 
-        Historian.getInstance().recordLogin(true, false, servletRequest.getRemoteAddr());
+		Historian.getInstance().recordLogin(true, false, conf.getClientIp(servletRequest));
 		return login(attrs.get(getEmailAttributeIdentifier()));
 	}
 
@@ -158,7 +158,7 @@ public class WebClientResource {
 	@POST
 	@Path("/users/{user_id}/email_issued")
 	public Response setEmailAddressIssued(@PathParam("user_id") int userID,
-	                                  @CookieParam("sessionid") String sessionid) {
+	                                      @CookieParam("sessionid") String sessionid) {
 		User u = Users.getLoggedInUser(userID, sessionid);
 		if(u == null)
 			return null;
@@ -246,7 +246,8 @@ public class WebClientResource {
 			return null;
 		}
 
-        Historian.getInstance().recordUnregistration(servletRequest.getRemoteAddr());
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		Historian.getInstance().recordUnregistration(conf.getClientIp(servletRequest));
 		logger.warn("Unregistering user {}", u.getUsername());
 		u.unregister();
 
@@ -284,19 +285,21 @@ public class WebClientResource {
 	@Path("/enroll/{token}")
 	@RateLimit
 	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
-        Historian.getInstance().recordEmailVerified(servletRequest.getRemoteAddr());
-        return loginWithToken(token, true);
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		Historian.getInstance().recordEmailVerified(conf.getClientIp(servletRequest));
+		return loginWithToken(token, true);
 	}
 
-    private Response loginWithToken(String token, boolean inEnrollment) {
+	private Response loginWithToken(String token, boolean inEnrollment) {
 		String email = EmailVerifier.getVerifiedAddress(token);
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		if (email == null) {
-            Historian.getInstance().recordLogin(false, true, servletRequest.getRemoteAddr());
+			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
 			return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        Historian.getInstance().recordLogin(true, true, servletRequest.getRemoteAddr());
+		}
+		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
 		return login(email);
-    }
+	}
 
 	private Response login(String email) {
 		User user = Users.getValidUser(email);
@@ -373,12 +376,12 @@ public class WebClientResource {
 		u.saveIt();
 
 		return new NewCookie[] {
-			new NewCookie("sessionid", u.getSessionToken(), "/", null, null,
-					KeyshareConfiguration.getInstance().getSessionTimeout()*60,
-					KeyshareConfiguration.getInstance().isHttpsEnabled()),
-			new NewCookie("userid", Integer.toString(u.getID()), "/", null, null,
-					KeyshareConfiguration.getInstance().getSessionTimeout()*60,
-					KeyshareConfiguration.getInstance().isHttpsEnabled())
+				new NewCookie("sessionid", u.getSessionToken(), "/", null, null,
+						KeyshareConfiguration.getInstance().getSessionTimeout()*60,
+						KeyshareConfiguration.getInstance().isHttpsEnabled()),
+				new NewCookie("userid", Integer.toString(u.getID()), "/", null, null,
+						KeyshareConfiguration.getInstance().getSessionTimeout()*60,
+						KeyshareConfiguration.getInstance().isHttpsEnabled())
 		};
 	}
 }

@@ -17,5 +17,32 @@
 
     // If set, periodically checks schememanager at the given URI and
     // downloads updates.
-    "schemeManager_update_uri": "https://privacybydesign.foundation/schememanager/pbdf"
+    "schemeManager_update_uri": "https://privacybydesign.foundation/schememanager/pbdf",
+
+    // Optional header that stores the client IP address.
+    // I.e. "X-Forwarded-For"
+    "client_ip_header": "X-Forwarded-For",
+
+    // Name of this keyshare server
+    "server_name": "keyshare_server",
+
+    // Name of the scheme manager (must be present in irma_configuration)
+    "scheme_manager": "test",
+
+    // Name of from address that sends mail
+    "mail_from": "test@test.com",
+
+    // SMTP mail settings, defaulting to mailcatcher https://mailcatcher.me/
+    "mail_host": "127.0.0.1",
+    "mail_port": "1025",
+    "mail_starttls_required": "false",
+
+    // Check if users have verified their e-mail address and aren't blocked
+    // This MUST be enabled for production use, but can be disabled for unit tests like those from irmago
+    "check_user_enrolled": "true",
+
+    // Settings for email issueing
+    "email_issuer": "test",
+    "email_login_credential": "mijnirma",
+    "email_login_attribute": "email"
 }
