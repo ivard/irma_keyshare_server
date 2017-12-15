@@ -46,8 +46,6 @@ import org.irmacard.mno.web.exceptions.KeyshareExceptionMapper;
 import org.javalite.activejdbc.Base;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import java.security.Security;
 
 import javax.ws.rs.ApplicationPath;
 import java.net.URI;
@@ -64,7 +62,6 @@ public class KeyshareApplication extends ResourceConfig {
     public static final String VERSION2 = "irma_keyshare2_server";
 
     public KeyshareApplication() {
-        Security.addProvider(new BouncyCastleProvider()); // TODO move to Updater class?
         KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 
         if (!DescriptionStore.isInitialized() || !IdemixKeyStore.isInitialized()) {
@@ -125,7 +122,7 @@ public class KeyshareApplication extends ResourceConfig {
             logger.info("Updating irma_configuration from {} ...",
                     conf.schemeManager_update_uri);
             try {
-                updated = Updater.Update(
+                updated = Updater.update(
                         conf.schemeManager_update_uri,
                         Paths.get(CORE_LOCATION).toString(),
                         conf.getSchemeManagerPublicKeyString());
