@@ -64,12 +64,15 @@ public class KeyshareConfiguration {
     private String client_ip_header = null;
 
 	private String apiserver_publickey = "apiserver.der";
+	private String schemeManager_publickey = "schemeManager.pk.pem";
 
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
     String events_webhook_uri = null;
     String events_webhook_authorizationToken = null;
+
+    String schemeManager_update_uri = null;
 
 	public KeyshareConfiguration() {}
 
@@ -192,6 +195,7 @@ public class KeyshareConfiguration {
 		return rate_limit;
 	}
 
+
 	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {
 		try {
 			if (bytes == null || bytes.length == 0)
@@ -270,6 +274,14 @@ public class KeyshareConfiguration {
 		else
 			return human_readable_name;
 	}
+
+    public String getSchemeManagerPublicKeyString() {
+        try {
+            return new String(getResource(schemeManager_publickey));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	public PublicKey getApiServerPublicKey() {
 		try {

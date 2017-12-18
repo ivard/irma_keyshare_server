@@ -15,6 +15,11 @@
     // webhook POST request set by events_webook_uri
     "events_webhook_authorizationToken": null,
 
+    // If set, periodically checks schememanager at the given URI and
+    // downloads updates.  If set, you also need to provide the public key
+    // of the schememanager in schemeManager.pk.pem.
+    "schemeManager_update_uri": null,
+
     // Optional header that stores the client IP address.
     // I.e. "X-Forwarded-For"
     "client_ip_header": "X-Forwarded-For",
