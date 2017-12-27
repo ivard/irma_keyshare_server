@@ -1,7 +1,5 @@
 # IRMA keyshare server
 
-** NOTE: Don't use this! This project is work in progress and not yet finished. **
-
 The IRMA keyshare server is a server that performs a share of the IRMA cryptography, so as to better protect the keys on the phone. It is meant to work together with the [IRMA mobile app](https://github.com/privacybydesign/irma_mobile).
 
 ## Configuring the server
