@@ -8,11 +8,21 @@ To configure the server you need to setup both `irma_configuration`, a MySQL dat
 
 ### irma_configuration
 
-Download or link the `irma_configuration` project to `src/main/resources/`. If both projects are in the same directory the following should work:
+The credential and issuer descriptions and issuer public keys - that is, the *scheme manager* information - are expected in a subdirectory called `irma_configuration` within `src/main/resources`. There are several options:
 
-    ln -s ../../../../irma_configuration src/main/resources/
+* You can use our [`irma-demo`](https://github.com/privacybydesign/irma-demo-schememanager) scheme manager (which includes issuer private keys) for experimenting,
+* You can use our [`pbdf`](https://github.com/privacybydesign/pbdf-schememanager) if you want to verify attributes issued by the [Privacy by Design Foundation](https://privacybydesign.foundation/issuance),
+* you can create your own scheme manager containing your own issuers and credential types.
 
-Note that for the irmago tests, you should use the `irma_configuration` folder provided with [irmago](https://github.com/privacybydesign/irmago/tree/master/testdata/irma_configuration)
+For example, in the first case, you would `cd` to your configuration directory, and do
+
+    mkdir irma_configuration 2>/dev/null
+    cd irma_configuration
+    git clone https://github.com/privacybydesign/irma-demo-schememanager irma-demo
+
+For more information, see the [README.md of the `irma-demo` scheme manager](https://github.com/privacybydesign/irma-demo-schememanager).
+
+Note that for the [`irmago`](https://github.com/privacybydesign/irmago) tests, you should use the `irma_configuration` folder provided with [irmago](https://github.com/privacybydesign/irmago/tree/master/testdata/irma_configuration)
 
 ### General configuration
 
