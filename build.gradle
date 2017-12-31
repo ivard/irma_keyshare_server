@@ -26,22 +26,17 @@ repositories {
 }
 
 dependencies {
+    compile 'org.irmacard.api:irma_api_common:0.8.0'
+
     compile 'org.glassfish.jersey.core:jersey-server:2.19'
     compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.19'
-
     compile 'ch.qos.logback:logback-classic:1.1.7'
-
     compile 'io.jsonwebtoken:jjwt:0.6.0'
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
-
     compile 'io.prometheus:simpleclient:0.1.0'
     compile 'io.prometheus:simpleclient_servlet:0.1.0'
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-
-    compile 'org.irmacard.api:irma_api_common:0.7.9'
-    compile 'org.irmacard.keyshare:irma_keyshare_common:0.0.4'
-    compile 'org.irmacard.credentials:credentials_api:0.18.3'
 
     // Database connections
     gretty 'commons-dbcp:commons-dbcp:1.4'
