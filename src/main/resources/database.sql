@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users 
 (
     id int unsigned NOT NULL auto_increment PRIMARY KEY,
-    username varchar(256),
+    username varchar(128),
     password varchar(256),
     sessionToken varchar(256),
     lastSeen long,
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS users
     publicKey varchar(4096),
     enrolled boolean,
     enabled boolean,
-    email_issued boolean
+    email_issued boolean,
+    INDEX (`username`)
 );
 -- INSERT INTO users VALUES (1, 'q@b.c', 'foobar', '1234-1234', '1234', 0, NULL, true, false);
 
