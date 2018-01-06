@@ -1,4 +1,5 @@
 irma_configuration
 config.json
+database.xml
 *.der
 *.pem
