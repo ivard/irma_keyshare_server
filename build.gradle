@@ -54,7 +54,7 @@ dependencies {
 }
 
 gretty {
-    contextConfigFile = file('src/test/resources/jetty-env.xml')
+    contextConfigFile = file('src/main/resources/database.xml')
     scanInterval = 10
     inplaceMode = "hard"
     httpsEnabled = true
