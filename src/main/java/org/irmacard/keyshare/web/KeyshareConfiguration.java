@@ -1,29 +1,27 @@
 package org.irmacard.keyshare.web;
 
-import com.google.gson.JsonSyntaxException;
-import org.irmacard.api.common.util.GsonUtil;
+import foundation.privacybydesign.common.BaseConfiguration;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.jsonwebtoken.SignatureAlgorithm;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class KeyshareConfiguration {
+public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfiguration> {
 	private static Logger logger = LoggerFactory.getLogger(KeyshareConfiguration.class);
 
-	private static final String filename = "config.json";
-	private static KeyshareConfiguration instance;
+	static {
+		BaseConfiguration.clazz = KeyshareConfiguration.class;
+		BaseConfiguration.environmentVarPrefix = "IRMA_KEYSHARE_CONF_";
+		BaseConfiguration.confDirEnvironmentVarName = "IRMA_KEYSHARE_CONF";
+		BaseConfiguration.logger = KeyshareConfiguration.logger;
+		BaseConfiguration.printOnLoad = true;
+	}
 
 	private String server_name = "IRMATestCloud";
 	private String human_readable_name;
@@ -76,27 +74,8 @@ public class KeyshareConfiguration {
 
 	public KeyshareConfiguration() {}
 
-	/**
-	 * Reloads the configuration from disk so that {@link #getInstance()} returns the updated version
-	 */
-	public static void load() {
-		// TODO: GSon seems to always be lenient (i.e. allow comments in the JSon), even though
-		// the documentation states that by default, it is not lenient. Why is this? Could change?
-		try {
-			String json = new String(getResource(filename));
-			instance = GsonUtil.getGson().fromJson(json, KeyshareConfiguration.class);
-		} catch (IOException |JsonSyntaxException e) {
-			logger.warn("Could not load configuration file. Using default values (may not work!)");
-			e.printStackTrace();
-			instance = new KeyshareConfiguration();
-		}
-	}
-
 	public static KeyshareConfiguration getInstance() {
-		if (instance == null)
-			load();
-
-		return instance;
+		return (KeyshareConfiguration) BaseConfiguration.getInstance();
 	}
 
 	public int getPinExpiry() {
@@ -195,68 +174,11 @@ public class KeyshareConfiguration {
 		return rate_limit;
 	}
 
-
-	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {
-		try {
-			if (bytes == null || bytes.length == 0)
-				throw new KeyManagementException("Could not read public key");
-
-			X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
-
-			return KeyFactory.getInstance("RSA").generatePublic(spec);
-		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-			throw new KeyManagementException(e);
-		}
-	}
-
-	public static PrivateKey parsePrivateKey(byte[] bytes) throws KeyManagementException {
-		try {
-			if (bytes == null || bytes.length == 0)
-				throw new KeyManagementException("Could not read private key");
-
-			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
-
-			return KeyFactory.getInstance("RSA").generatePrivate(spec);
-		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-			throw new KeyManagementException(e);
-		}
-	}
-
-	public static byte[] getResource(String filename) throws IOException {
-		URL url = KeyshareConfiguration.class.getClassLoader().getResource(filename);
-		if (url == null)
-			throw new IOException("Could not load file " + filename);
-
-		URLConnection urlCon = url.openConnection();
-		urlCon.setUseCaches(false);
-		return convertSteamToByteArray(urlCon.getInputStream(), 2048);
-	}
-
-	public static byte[] convertSteamToByteArray(InputStream stream, int size) throws IOException {
-		byte[] buffer = new byte[size];
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-		int line;
-		while ((line = stream.read(buffer)) != -1) {
-			os.write(buffer, 0, line);
-		}
-		stream.close();
-
-		os.flush();
-		os.close();
-		return os.toByteArray();
-	}
-
-	@Override
-	public String toString() {
-		return GsonUtil.getGson().toJson(this);
-	}
-
 	public PrivateKey getJwtPrivateKey() {
 		if (jwtPrivateKey == null) {
 			try {
-				jwtPrivateKey = parsePrivateKey(getResource(jwt_privatekey));
-			} catch (KeyManagementException|IOException e) {
+				jwtPrivateKey = getPrivateKey(jwt_privatekey);
+			} catch (KeyManagementException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -285,8 +207,8 @@ public class KeyshareConfiguration {
 
 	public PublicKey getApiServerPublicKey() {
 		try {
-			return parsePublicKey(getResource(apiserver_publickey));
-		} catch (KeyManagementException|IOException e) {
+			return getPublicKey(apiserver_publickey);
+		} catch (KeyManagementException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -294,8 +216,8 @@ public class KeyshareConfiguration {
 	public PublicKey getJwtPublicKey() {
 		if (jwtPublicKey == null) {
 			try {
-				jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
-			} catch (KeyManagementException|IOException e) {
+				jwtPublicKey = getPublicKey(jwt_publickey);
+			} catch (KeyManagementException e) {
 				throw new RuntimeException(e);
 			}
 		}
