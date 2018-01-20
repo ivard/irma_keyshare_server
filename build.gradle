@@ -3,6 +3,10 @@ apply plugin: 'eclipse-wtp'
 apply plugin: 'org.akhikhl.gretty'
 apply plugin: 'org.javalite.activejdbc'
 
+war {
+    archiveName 'irma_keyshare_server.war'
+}
+
 buildscript {
     repositories {
         mavenLocal()
