@@ -18,6 +18,15 @@ CREATE TABLE IF NOT EXISTS users
 );
 -- INSERT INTO users VALUES (1, 'q@b.c', 'foobar', '1234-1234', '1234', 0, NULL, true, false);
 
+CREATE TABLE IF NOT EXISTS email_addresses
+(
+    id int unsigned NOT NULL auto_increment PRIMARY KEY,
+    user_id int unsigned,
+    emailAddress varchar(128),
+    verified boolean,
+    INDEX (`emailAddress`)
+);
+
 -- DROP TABLE IF EXISTS log_entry_records;
 CREATE TABLE IF NOT EXISTS log_entry_records
 (

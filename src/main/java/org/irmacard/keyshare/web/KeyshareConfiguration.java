@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.*;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfiguration> {
@@ -47,12 +48,16 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 	private String email_login_credential = "";
 	private String email_login_attribute = "";
 
-	private String login_email_subject = "Log in on the keyshare server";
-	private String login_email_body = "Click on the link below to log in on the keyshare server.";
 	private String register_email_subject = "Verify your email address";
 	private String register_email_body = "To finish registering to the keyshare server, please click on the link below.";
 	private String double_registration_email_subject = "Someone tried to re-register this email address";
 	private String double_registration_email_body = "Someone tried to re-register this email address. Was this you? If so, you first need to unregister. If this wasn't you, you can ignore this message.";
+
+	private String defaultLanguage = "en";
+	private Map<String, String> login_email_subject;
+	private Map<String, String> login_email_body;
+	private Map<String, String> confirm_email_body;
+	private Map<String, String> confirm_email_subject;
 
 	private boolean check_user_enrolled = true;
 
@@ -71,6 +76,9 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
     String events_webhook_authorizationToken = null;
 
     String schemeManager_update_uri = null;
+
+	private String apiserver_url;
+	private String apiserver_pk;
 
 	public KeyshareConfiguration() {}
 
@@ -140,14 +148,6 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 		return email_login_attribute;
 	}
 
-	public String getLoginEmailSubject() {
-		return login_email_subject;
-	}
-
-	public String getLoginEmailBody() {
-		return login_email_body;
-	}
-
 	public String getRegisterEmailSubject() {
 		return register_email_subject;
 	}
@@ -162,6 +162,31 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 
 	public String getDoubleRegistrationEmailBody() {
 		return double_registration_email_body;
+	}
+
+	public String getLoginEmailSubject(String lang) {
+		return getTranslatedString(login_email_subject, lang);
+	}
+
+	public String getLoginEmailBody(String lang) {
+		return getTranslatedString(login_email_body, lang);
+	}
+
+	public String getConfirmEmailSubject(String lang) {
+		return getTranslatedString(confirm_email_subject, lang);
+	}
+
+	public String getConfirmEmailBody(String lang) {
+		return getTranslatedString(confirm_email_body, lang);
+	}
+
+	private String getTranslatedString(Map<String, String> map, String lang) {
+		if (!map.containsKey(lang)) // TODO this is ugly, should keep track of supported languages
+			lang = defaultLanguage;
+		String retval = map.containsKey(lang) ? map.get(lang) : "";
+		if (retval.isEmpty())
+			logger.warn("Translation for %s in language %s not found", map.get(defaultLanguage), lang);
+		return retval;
 	}
 
 	public boolean getCheckUserEnrolled() { return check_user_enrolled; }
@@ -204,6 +229,10 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
             throw new RuntimeException(e);
         }
     }
+
+	public String getApiServerUrl() {
+		return apiserver_url;
+	}
 
 	public PublicKey getApiServerPublicKey() {
 		try {

@@ -6,6 +6,8 @@ public class UserLoginMessage {
 	private String username;
 	private String password;
 	private String pin;
+	private String email;
+	private String language;
 	private PublicKey publicKey;
 
 	public UserLoginMessage() {};
@@ -53,5 +55,21 @@ public class UserLoginMessage {
 
 	public void setPublicKey(PublicKey publicKey) {
 		this.publicKey = publicKey;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
 	}
 }

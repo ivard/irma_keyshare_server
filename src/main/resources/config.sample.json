@@ -45,5 +45,8 @@
     // Settings for email issueing
     "email_issuer": "test",
     "email_login_credential": "mijnirma",
-    "email_login_attribute": "email"
+    "email_login_attribute": "email",
+
+    // URL to API server to start authentication sessions with
+    "apiserver_url": ""
 }

@@ -42,7 +42,10 @@ public class EmailVerifier {
 
 		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
 		String url = callback + record.getToken();
-		body = body + "\n\n" + url;
+		if (body.contains("%s"))
+			body = String.format(body, url);
+		else
+			body = body + "\n\n" + url;
 
 		EmailSender.send(email, subject, body);
 	}

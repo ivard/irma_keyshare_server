@@ -96,6 +96,8 @@ public class KeyshareApplication extends ResourceConfig {
 
         register(WebClientResource.class);
 
+        register(ClientResource.class);
+
         // Enable the Historian class, if an events webhook is set.
         if (conf.events_webhook_uri != null) {
             Historian.getInstance().enable(

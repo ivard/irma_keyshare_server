@@ -13,6 +13,7 @@ import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.KeyshareConfiguration;
+import org.irmacard.keyshare.web.email.EmailAddress;
 import org.javalite.activejdbc.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,6 +203,10 @@ public class User extends Model {
 
 	public void addLog(LogEntryType event, int param) {
 		add(new LogEntryRecord(event, param));
+	}
+
+	public void addEmailAddress(String email) {
+		add(new EmailAddress(email));
 	}
 
 	public LogEntryList getLogs(long start) {

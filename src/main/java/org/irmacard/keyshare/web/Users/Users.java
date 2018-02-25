@@ -3,6 +3,8 @@ package org.irmacard.keyshare.web.users;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.email.EmailAddress;
+import org.javalite.activejdbc.LazyList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,37 +18,25 @@ public class Users {
 	static private SecureRandom srnd = new SecureRandom();
 
 	@NotNull
-	static public User register(UserLoginMessage login) {
-		logger.info("Registering user with username {}", login.getUsername());
+	static public User register(@NotNull UserLoginMessage userData, boolean isEnrolled) {
+		logger.info("Registering user with username {}", userData.getUsername());
 
-		User u = getUser(login.getUsername());
+		User u = getUser(userData.getUsername());
 		if(u != null && u.isEnrolled()) {
-			logger.info("Username {} already registered", login.getUsername());
+			logger.info("Username {} already registered", userData.getUsername());
 			return u;
 		}
 
-		u = new User(login);
-		u.setEnrolled(false);
+		u = new User(userData);
+		u.setEnrolled(isEnrolled);
 		u.saveIt();
 
 		return u;
 	}
 
-	static public User verify(UserLoginMessage login) {
-		User u = getUser(login.getUsername());
-		if(u == null) {
-			// TODO: handle properly
-			logger.info("Cannot find username: {}", login.getUsername());
-			return null;
-		}
-
-		if(!u.verifyPassword(login.getPassword())) {
-			// TODO: handle properly
-			logger.info("Password for user {} is incorrect", login.getUsername());
-			return null;
-		}
-
-		return u;
+	@NotNull
+	static public User register(@NotNull UserLoginMessage login) {
+		return register(login, false);
 	}
 
 	static public UserSession getSessionForUser(User u) {
@@ -65,6 +55,18 @@ public class Users {
 
 	static public User getUser(String username) {
 		return User.findFirst(User.USERNAME_FIELD + " = ?", username);
+	}
+
+	public static User verifyEmailAddress(String email) {
+		EmailAddress e = (EmailAddress) EmailAddress.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email).include(User.class).get(0);
+		if (e == null) return null;
+		e.verify();
+		return e.parent(User.class);
+	}
+
+	static public User getUserByEmail(String email) {
+		// TODO: can one email address be associated to multiple users?
+		return  (User) EmailAddress.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE", email).include(User.class).get(0).parent(User.class);
 	}
 
 	static public User getLoggedInUser(int user_id, String sessionid) {

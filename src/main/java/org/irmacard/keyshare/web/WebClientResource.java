@@ -1,6 +1,7 @@
 package org.irmacard.keyshare.web;
 
 import com.google.gson.reflect.TypeToken;
+import foundation.privacybydesign.common.ApiClient;
 import org.irmacard.api.common.*;
 import org.irmacard.api.common.disclosure.DisclosureProofResult;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
@@ -19,14 +20,10 @@ import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.mail.internet.AddressException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -77,6 +74,7 @@ public class WebClientResource {
 		if (u == null || !u.isEnrolled()) {
 			Historian.getInstance().recordRegistration(false, conf.getClientIp(servletRequest));
 			u = Users.register(user);
+			u.addEmailAddress(u.getUsername());
 			EmailVerifier.verifyEmail(
 					u.getUsername(),
 					conf.getRegisterEmailSubject(),
@@ -93,6 +91,16 @@ public class WebClientResource {
 		}
 
 		return new UserMessage();
+	}
+
+	@GET @Path("/users/auth-qr")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public ClientQr getAuthenticationQr() {
+		return ApiClient.createApiSession(
+				KeyshareConfiguration.getInstance().getApiServerUrl() + "irma_api_server/api/v2/verification/",
+				getEmailDisclosureJwt()
+		);
 	}
 
 	@GET
@@ -297,12 +305,19 @@ public class WebClientResource {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
+
+		User u = inEnrollment ? Users.verifyEmailAddress(email) : Users.getUserByEmail(email);
+		if (u == null) {
+			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+
 		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
 		return login(email);
 	}
 
-	private Response login(String email) {
-		User user = Users.getValidUser(email);
+	private Response login(String username) {
+		User user = Users.getValidUser(username);
 		user.setEnrolled(true);
 		Users.getSessionForUser(user);
 
@@ -321,8 +336,8 @@ public class WebClientResource {
 			logger.info("Sending OTP to {}", email);
 			EmailVerifier.verifyEmail(
 					email,
-					conf.getLoginEmailSubject(),
-					conf.getLoginEmailBody(),
+					conf.getLoginEmailSubject(user.getLanguage()),
+					conf.getLoginEmailBody(user.getLanguage()),
 					conf.getWebclientUrl() + "/#login/",
 					60 * 60 // 1 hour
 			);
