@@ -46,15 +46,18 @@ public class ClientResource {
 		String lang = userData.getLanguage();
 		userData.setUsername(generateUsername());
 		User u = Users.register(userData, true);
-		u.addEmailAddress(userData.getEmail());
 
-		if (conf.getCheckUserEnrolled()) {
-			EmailVerifier.verifyEmail(
-					userData.getEmail(),
-					conf.getConfirmEmailSubject(lang),
-					conf.getConfirmEmailBody(lang),
-					conf.getWebclientUrl() + "/#enroll/"
-			);
+		String email = userData.getEmail();
+		if (email.length() > 0 ) {
+			u.addEmailAddress(email);
+			if (conf.getCheckUserEnrolled()) {
+				EmailVerifier.verifyEmail(
+						userData.getEmail(),
+						conf.getConfirmEmailSubject(lang),
+						conf.getConfirmEmailBody(lang),
+						conf.getWebclientUrl() + "/#enroll/"
+				);
+			}
 		}
 
 		// Construct request for login credential
@@ -65,7 +68,7 @@ public class ClientResource {
 		calendar.add(Calendar.YEAR, 25); // TODO magic number
 		credentials.add(new CredentialRequest(
 				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
-				new CredentialIdentifier(
+				new CredentialIdentifier( // TODO make new credential type for this
 						conf.getSchemeManager(),
 						conf.getEmailIssuer(),
 						conf.getEmailLoginCredential()

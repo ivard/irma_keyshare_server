@@ -66,7 +66,13 @@ public class Users {
 
 	static public User getUserByEmail(String email) {
 		// TODO: can one email address be associated to multiple users?
-		return  (User) EmailAddress.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE", email).include(User.class).get(0).parent(User.class);
+		LazyList<EmailAddress> users =  EmailAddress
+				.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE", email)
+				.include(User.class);
+
+		if (users.size() == 0)
+			return null;
+		return users.get(0).parent(User.class);
 	}
 
 	static public User getLoggedInUser(int user_id, String sessionid) {

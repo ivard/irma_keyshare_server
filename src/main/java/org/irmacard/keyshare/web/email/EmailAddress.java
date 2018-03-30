@@ -6,6 +6,9 @@ public class EmailAddress extends Model {
 	public static final String EMAIL_ADDRESS_FIELD = "emailAddress";
 	public static final String VERIFIED_FIELD = "verified";
 
+	// ActiveJDBC needs a default constructor
+	public EmailAddress() {}
+
 	public EmailAddress(String email) {
 		setString(EMAIL_ADDRESS_FIELD, email);
 		setBoolean(VERIFIED_FIELD, false);
@@ -13,7 +16,11 @@ public class EmailAddress extends Model {
 	}
 
 	public void verify() {
-		setBoolean(VERIFIED_FIELD, false);
+		setBoolean(VERIFIED_FIELD, true);
 		saveIt();
+	}
+
+	public String get() {
+		return getString(EMAIL_ADDRESS_FIELD);
 	}
 }

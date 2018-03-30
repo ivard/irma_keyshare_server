@@ -16,7 +16,7 @@ buildscript {
     }
     dependencies {
 //        classpath "com.h2database:h2:1.4.192"
-        classpath 'org.akhikhl.gretty:gretty:1.4.0'
+        classpath 'org.akhikhl.gretty:gretty:2.0.0'
         classpath "org.javalite:activejdbc-gradle-plugin:1.4.13"
     }
 }

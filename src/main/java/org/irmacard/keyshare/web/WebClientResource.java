@@ -12,6 +12,7 @@ import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
+import org.irmacard.keyshare.web.email.EmailAddress;
 import org.irmacard.keyshare.web.email.EmailSender;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.RateLimit;
@@ -129,19 +130,29 @@ public class WebClientResource {
 		);
 	}
 
+	// TODO move someplace else
+	private Map<AttributeIdentifier, String> parseApiServerJwt(String jwt) {
+		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
+		JwtParser<Map<AttributeIdentifier, String>> parser
+				= new JwtParser<>(t, false, 10*1000, "disclosure_result", "attributes");
+		parser.setSigningKey(KeyshareConfiguration.getInstance().getApiServerPublicKey());
+
+		parser.parseJwt(jwt);
+
+		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status"))) {
+			return null;
+		}
+
+		return parser.getPayload();
+	}
+
 	@POST
 	@Path("/login-irma/proof")
 	@RateLimit
 	public Response loginUsingEmailAttribute(String jwt) {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
-		Type t = new TypeToken<Map<AttributeIdentifier, String>> () {}.getType();
-		JwtParser<Map<AttributeIdentifier, String>> parser
-				= new JwtParser<>(t, false, 10*1000, "disclosure_result", "attributes");
-		parser.setSigningKey(KeyshareConfiguration.getInstance().getApiServerPublicKey());
-		parser.parseJwt(jwt);
-
-		Map<AttributeIdentifier, String> attrs = parser.getPayload();
-		if (!DisclosureProofResult.Status.VALID.name().equals(parser.getClaims().get("status"))) {
+		Map<AttributeIdentifier, String> attrs = parseApiServerJwt(jwt);
+		if (attrs == null) {
 			Historian.getInstance().recordLogin(false, false, conf.getClientIp(servletRequest));
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
 		}
@@ -163,6 +174,35 @@ public class WebClientResource {
 		return getEmailDisclosureJwt();
 	}
 
+	@GET
+	@Path("/users/{user_id}/add_email")
+	@Produces(MediaType.TEXT_PLAIN)
+	@RateLimit
+	public String getAddEmailAddressJwt(@PathParam("user_id") int userID,
+	                                    @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if (u == null) return null;
+		return getEmailDisclosureJwt();
+	}
+
+	@POST
+	@Path("/users/{user_id}/add_email")
+	@Consumes(MediaType.TEXT_PLAIN)
+	public Response addEmailAddress(@PathParam("user_id") int userID,
+	                                @CookieParam("sessionid") String sessionid,
+	                                String apiServerJwt) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if (u == null) return null;
+
+		Map<AttributeIdentifier, String> attrs = parseApiServerJwt(apiServerJwt);
+		if (attrs == null) {
+			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
+		}
+
+		u.addEmailAddress(attrs.get(getEmailAttributeIdentifier()));
+		return getCookiePostResponse(u);
+	}
+
 	@POST
 	@Path("/users/{user_id}/email_issued")
 	public Response setEmailAddressIssued(@PathParam("user_id") int userID,
@@ -181,43 +221,26 @@ public class WebClientResource {
 	public String getEmailIssuanceJwt(@PathParam("user_id") int userID,
 	                                  @CookieParam("sessionid") String sessionid) {
 		User u = Users.getLoggedInUser(userID, sessionid);
-		if(u == null)
+		if(u == null || u.getEmailAddressIssued() || u.getEmailAddresses().size() == 0)
+			// TODO some error message in case of the latter two conditions?
 			return null;
 
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		ArrayList<CredentialRequest> credentials = new ArrayList<>(2);
-
-		// Add login credential with long expiry
 		HashMap<String,String> attrs = new HashMap<>(1);
-		attrs.put(conf.getEmailLoginAttribute(), u.getUsername());
+
+		attrs.put(conf.getEmailAttribute(), u.getEmailAddresses().get(0).get());
 		Calendar calendar = Calendar.getInstance();
-		calendar.add(Calendar.YEAR, 5);
+		calendar.add(Calendar.YEAR, 1);
 		credentials.add(new CredentialRequest(
 				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
 				new CredentialIdentifier(
 						conf.getSchemeManager(),
 						conf.getEmailIssuer(),
-						conf.getEmailLoginCredential()
+						conf.getEmailCredential()
 				),
 				attrs
 		));
-
-		// Add normal email credential with normal expiry
-		if (!u.getEmailAddressIssued()) {
-			attrs = new HashMap<>(1);
-			attrs.put(conf.getEmailAttribute(), u.getUsername());
-			calendar = Calendar.getInstance();
-			calendar.add(Calendar.YEAR, 1);
-			credentials.add(new CredentialRequest(
-					(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
-					new CredentialIdentifier(
-							conf.getSchemeManager(),
-							conf.getEmailIssuer(),
-							conf.getEmailCredential()
-					),
-					attrs
-			));
-		}
 
 		IdentityProviderRequest ipRequest = new IdentityProviderRequest("", new IssuingRequest(null, null, credentials), 120);
 		return ApiClient.getSignedIssuingJWT(ipRequest,
@@ -306,6 +329,7 @@ public class WebClientResource {
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 
+		logger.info("Getting user object");
 		User u = inEnrollment ? Users.verifyEmailAddress(email) : Users.getUserByEmail(email);
 		if (u == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
@@ -313,7 +337,7 @@ public class WebClientResource {
 		}
 
 		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
-		return login(email);
+		return login(u.getUsername());
 	}
 
 	private Response login(String username) {
@@ -329,9 +353,9 @@ public class WebClientResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@RateLimit
 	public Response userLogin(UserLoginMessage user) throws AddressException {
-		String email = user.getUsername();
+		String email = user.getEmail();
 
-		if (User.count(User.USERNAME_FIELD + " = ?", email) != 0) {
+		if (EmailAddress.count(EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email) != 0) {
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			logger.info("Sending OTP to {}", email);
 			EmailVerifier.verifyEmail(

@@ -1,5 +1,10 @@
 package org.irmacard.keyshare.common;
 
+import org.irmacard.keyshare.web.email.EmailAddress;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class UserMessage {
 		private String username;
 		private String sessionToken;
@@ -7,16 +12,22 @@ public class UserMessage {
 		private boolean enrolled;
 		private boolean enabled;
 		private boolean emailIssued;
+		private List<String> emailAddresses;
 
 		public UserMessage() {};
 
-		public UserMessage(String username, String sessionToken, String ID, boolean enrolled, boolean enabled, boolean emailIssued) {
+		public UserMessage(String username, String sessionToken, String ID, boolean enrolled, boolean enabled, boolean emailIssued, List<EmailAddress> emailAddresses) {
 			this.username = username;
 			this.sessionToken = sessionToken;
 			this.ID = ID;
 			this.enrolled = enrolled;
 			this.emailIssued = emailIssued;
 			this.setEnabled(enabled);
+
+			this.emailAddresses = new ArrayList<>(emailAddresses.size());
+			for (EmailAddress addr : emailAddresses) {
+				this.emailAddresses.add(addr.get());
+			}
 		}
 
 		public String getUsername() {
@@ -65,5 +76,9 @@ public class UserMessage {
 
 		public void setEmailIssued(boolean emailIssued) {
 			this.emailIssued = emailIssued;
+		}
+
+		public List<String> getEmailAddresses() {
+			return emailAddresses;
 		}
 }

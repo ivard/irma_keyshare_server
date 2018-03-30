@@ -127,7 +127,7 @@ public class User extends Model {
 	}
 
 	public UserMessage getAsMessage() {
-		return new UserMessage(getUsername(), getSessionToken(), "" + getID(), isEnrolled(), isEnabled(), getEmailAddressIssued());
+		return new UserMessage(getUsername(), getSessionToken(), "" + getID(), isEnrolled(), isEnabled(), getEmailAddressIssued(), getEmailAddresses());
 	}
 
 	public String getPIN() {
@@ -206,7 +206,13 @@ public class User extends Model {
 	}
 
 	public void addEmailAddress(String email) {
-		add(new EmailAddress(email));
+		// Don't insert duplicate email addresses
+		if (EmailAddress.count("emailAddress = ? and user_id = ?", email, getID()) == 0)
+			add(new EmailAddress(email));
+	}
+
+	public List<EmailAddress> getEmailAddresses() {
+		return getAll(EmailAddress.class);
 	}
 
 	public LogEntryList getLogs(long start) {
