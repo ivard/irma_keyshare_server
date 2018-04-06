@@ -40,6 +40,7 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 	private int mail_port = 587;
 
 	private String webclient_url = "";
+	private String url = "http://localhost:8080/irma_keyshare_server/api/v1";
 
 	private String scheme_manager = "";
 	private String email_issuer = "";
@@ -122,6 +123,10 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 
 	public boolean isHttpsEnabled() {
 		return webclient_url.startsWith("https://");
+	}
+
+	public String getUrl() {
+		return url;
 	}
 
 	public String getSchemeManager() {

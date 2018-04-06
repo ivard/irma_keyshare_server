@@ -48,7 +48,7 @@ public class ClientResource {
 		User u = Users.register(userData, true);
 
 		String email = userData.getEmail();
-		if (email.length() > 0 ) {
+		if (email.length() > 0) {
 			u.addEmailAddress(email);
 			if (conf.getCheckUserEnrolled()) {
 				EmailVerifier.verifyEmail(
@@ -56,7 +56,7 @@ public class ClientResource {
 						userData.getEmail(),
 						conf.getConfirmEmailSubject(lang),
 						conf.getConfirmEmailBody(lang),
-						conf.getWebclientUrl() + "/#enroll/"
+						conf.getUrl() + "/web/enroll/"
 				);
 			}
 		}

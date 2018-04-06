@@ -1,7 +1,6 @@
 package org.irmacard.keyshare.web;
 
 import com.google.gson.reflect.TypeToken;
-import com.mysql.jdbc.log.Log;
 import foundation.privacybydesign.common.ApiClient;
 import org.irmacard.api.common.*;
 import org.irmacard.api.common.disclosure.DisclosureProofResult;
@@ -29,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 @Path("web")
@@ -80,7 +81,7 @@ public class WebClientResource {
 					u.getUsername(),
 					conf.getRegisterEmailSubject(),
 					conf.getRegisterEmailBody(),
-					conf.getWebclientUrl() + "/#enroll/"
+					conf.getUrl() + "/web/enroll/"
 			);
 		} else {
 			Historian.getInstance().recordRegistration(true, conf.getClientIp(servletRequest));
@@ -158,7 +159,9 @@ public class WebClientResource {
 		}
 
 		Historian.getInstance().recordLogin(true, false, conf.getClientIp(servletRequest));
-		return getLoginResponse(Users.getValidUser(attrs.get(getEmailAttributeIdentifier())));
+		User user = Users.getValidUser(attrs.get(getEmailAttributeIdentifier()));
+		loginUser(user);
+		return getCookiePostResponse(user);
 	}
 
 	@GET
@@ -315,7 +318,7 @@ public class WebClientResource {
 	@GET
 	@Path("/enroll/{token}")
 	@RateLimit
-	public Response enroll(@PathParam("token") String token) {
+	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		Historian.getInstance().recordEmailVerified(conf.getClientIp(servletRequest));
 
@@ -343,21 +346,48 @@ public class WebClientResource {
 		}
 
 		u.verifyEmailAddress(record.getEmail());
+		loginUser(u);
 		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
-		return getLoginResponse(u);
+		return Response
+				.temporaryRedirect(new URI(KeyshareConfiguration.getInstance().getWebclientUrl()))
+				.cookie(getSessionCookie(u, newCookie("enroll", "true")))
+				.build();
+	}
+
+	@GET
+	@Path("/candidates/{token}")
+	public Response getCandidates(@PathParam("token") String token) throws URISyntaxException {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+
+		// Get email address verification record and all users that have this email address
+		EmailVerificationRecord record = EmailVerifier.findRecord(token);
+		if (record == null) {
+			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+
+		User u = null;
+		List<EmailAddress> candidates = EmailAddress.find(record.getEmail());
+		List<UserCandidate> users = new ArrayList<>(candidates.size());
+		for (EmailAddress candidate : candidates) {
+			u = candidate.parent(User.class);
+			users.add(new UserCandidate(u.getUsername(), u.getLastSeen()));
+		}
+		return Response.ok(new UserMessage(users)).build(); // TODO this no longer needs to be a UserMessage
 	}
 
 	@GET
 	@Path("/login/{token}")
 	@RateLimit
-	public Response oneTimePasswordLogin(@PathParam("token") String token) {
+	public Response oneTimePasswordLogin(@PathParam("token") String token) throws URISyntaxException {
 		return oneTimePasswordLogin(token, null);
 	}
 
 	@GET
 	@Path("/login/{token}/{username}")
+	@Produces(MediaType.TEXT_PLAIN)
 	@RateLimit
-	public Response oneTimePasswordLogin(@PathParam("token") String token, @PathParam("username") String username) {
+	public Response oneTimePasswordLogin(@PathParam("token") String token, @PathParam("username") String username) throws URISyntaxException {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 
 		// Get email address verification record and all users that have this email address
@@ -372,17 +402,9 @@ public class WebClientResource {
 		User u = null; // The user to return if any
 
 		// Multiple users have this email address, but no username was specified
-		// Return a list of user candidates and don't mark the token as consumed
-		if (size > 1 && (username == null || username.length() == 0)) {
-			// Multiple users have this email address, return a list of them for the client to choose one from
-			List<UserCandidate> users = new ArrayList<>(size);
-			for (EmailAddress candidate : candidates) {
-				u = candidate.parent(User.class);
-				logger.warn("User last seen {}", u.getLastSeen());
-				users.add(new UserCandidate(u.getUsername(), u.getLastSeen()));
-			}
-			return Response.ok(new UserMessage(users)).build();
-		}
+		// Don't mark the token as consumed and put the token in a cookie for later retrieval of the candidates
+		if (size > 1 && (username == null))
+			return getMultipleCandidatesRedirectResponse(token);
 
 		record.setVerified(); // This token is now consumed
 		if (size > 1) { // a username was specified, look it up
@@ -394,15 +416,29 @@ public class WebClientResource {
 		// else if (size == 0) nop;
 
 		Historian.getInstance().recordLogin(u != null, true, conf.getClientIp(servletRequest));
-		if (u != null)
-			return getLoginResponse(u);
-		return Response.status(Response.Status.NOT_FOUND).build();
+		if (u == null)
+			return Response.status(Response.Status.NOT_FOUND).build();
+
+		loginUser(u);
+
+		Response.ResponseBuilder builder = null;
+		if (username == null)
+			builder = Response.temporaryRedirect(new URI(KeyshareConfiguration.getInstance().getWebclientUrl()));
+		else
+			builder = Response.ok("OK");
+		return builder.cookie(getSessionCookie(u, nullCookie("token"))).build();
 	}
 
-	private Response getLoginResponse(User user) {
+	private Response getMultipleCandidatesRedirectResponse(String token) throws URISyntaxException {
+		return Response
+				.temporaryRedirect(new URI(KeyshareConfiguration.getInstance().getWebclientUrl()))
+				.cookie(newCookie("token", token))
+				.build();
+	}
+
+	private void loginUser(User user) {
 		user.setEnrolled(true);
 		Users.getSessionForUser(user);
-		return getCookiePostResponse(user);
 	}
 
 	@POST
@@ -420,7 +456,7 @@ public class WebClientResource {
 					email,
 					conf.getLoginEmailSubject(user.getLanguage()),
 					conf.getLoginEmailBody(user.getLanguage()),
-					conf.getWebclientUrl() + "/#login/",
+					conf.getUrl() + "/web/login/",
 					60 * 60 // 1 hour
 			);
 		} else {
@@ -445,9 +481,7 @@ public class WebClientResource {
 			return Response.ok("OK - Unknown session").build();
 
 		Users.clearSessionForUser(u);
-		NewCookie nullCookie = new NewCookie("sessionid", null, "/", null, null, 0,
-				KeyshareConfiguration.getInstance().isHttpsEnabled());
-		return Response.ok("OK").cookie(nullCookie).build();
+		return Response.ok("OK").cookie(nullCookie("sessionid")).build();
 	}
 
 	private Response getCookiePostResponse(User u) {
@@ -461,17 +495,32 @@ public class WebClientResource {
 				.build();
 	}
 
+	private NewCookie newCookie(String key, String value) {
+		return new NewCookie(key, value, "/", null, null,
+				KeyshareConfiguration.getInstance().getSessionTimeout()*60,
+				KeyshareConfiguration.getInstance().isHttpsEnabled());
+	}
+
+	private NewCookie nullCookie(String key) {
+		return new NewCookie(key, null, "/", null, null, 0, KeyshareConfiguration.getInstance().isHttpsEnabled());
+	}
+
 	private NewCookie[] getSessionCookie(User u) {
 		u.setSeen();
 		u.saveIt();
-
 		return new NewCookie[] {
-				new NewCookie("sessionid", u.getSessionToken(), "/", null, null,
-						KeyshareConfiguration.getInstance().getSessionTimeout()*60,
-						KeyshareConfiguration.getInstance().isHttpsEnabled()),
-				new NewCookie("userid", Integer.toString(u.getID()), "/", null, null,
-						KeyshareConfiguration.getInstance().getSessionTimeout()*60,
-						KeyshareConfiguration.getInstance().isHttpsEnabled())
+				newCookie("sessionid", u.getSessionToken()),
+				newCookie("userid", Integer.toString(u.getID()))
+		};
+	}
+
+	private NewCookie[] getSessionCookie(User u, NewCookie cookie) {
+		u.setSeen();
+		u.saveIt();
+		return new NewCookie[] {
+				cookie,
+				newCookie("sessionid", u.getSessionToken()),
+				newCookie("userid", Integer.toString(u.getID()))
 		};
 	}
 }
