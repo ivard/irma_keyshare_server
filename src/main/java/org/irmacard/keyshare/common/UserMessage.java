@@ -15,8 +15,6 @@ public class UserMessage {
 	private boolean emailIssued;
 	private List<String> emailAddresses;
 
-	private List<UserCandidate> candidates;
-
 	public UserMessage() {}
 
 	public UserMessage(String username, String sessionToken, String ID, boolean enrolled, boolean enabled, boolean emailIssued, List<EmailAddress> emailAddresses) {
@@ -32,10 +30,6 @@ public class UserMessage {
 			this.emailAddresses.add(addr.get());
 		}
 	}
-
-	public UserMessage(List<UserCandidate> candidates) {
-		this.candidates = candidates;
-	};
 
 	public String getUsername() {
 		return username;
@@ -91,13 +85,5 @@ public class UserMessage {
 
 	public void setEmailAddresses(List<String> emailAddresses) {
 		this.emailAddresses = emailAddresses;
-	}
-
-	public List<UserCandidate> getCandidates() {
-		return candidates;
-	}
-
-	public void setCandidates(List<UserCandidate> candidates) {
-		this.candidates = candidates;
 	}
 }

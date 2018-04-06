@@ -352,6 +352,7 @@ public class WebClientResource {
 
 	@GET
 	@Path("/candidates/{token}")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCandidates(@PathParam("token") String token) throws URISyntaxException {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 
@@ -369,7 +370,7 @@ public class WebClientResource {
 			u = candidate.parent(User.class);
 			users.add(new UserCandidate(u.getUsername(), u.getLastSeen()));
 		}
-		return Response.ok(new UserMessage(users)).build(); // TODO this no longer needs to be a UserMessage
+		return Response.ok(users).build();
 	}
 
 	@GET
