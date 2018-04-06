@@ -1,6 +1,9 @@
 package org.irmacard.keyshare.web.email;
 
+import org.irmacard.keyshare.web.users.User;
 import org.javalite.activejdbc.Model;
+
+import java.util.List;
 
 public class EmailAddress extends Model {
 	public static final String EMAIL_ADDRESS_FIELD = "emailAddress";
@@ -22,5 +25,12 @@ public class EmailAddress extends Model {
 
 	public String get() {
 		return getString(EMAIL_ADDRESS_FIELD);
+	}
+
+	public static List<EmailAddress> find(String email) {
+		return EmailAddress.find(
+						EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE",
+						email)
+				.include(User.class);
 	}
 }

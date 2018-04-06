@@ -45,5 +45,6 @@ CREATE TABLE IF NOT EXISTS email_verification_records
     timeout int NOT NULL,
     validity int NOT NULL,
     time_created long NOT NULL,
-    time_verified long
+    time_verified long,
+    user_id int unsigned
 );

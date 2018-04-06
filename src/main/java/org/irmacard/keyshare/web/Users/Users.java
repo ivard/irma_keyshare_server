@@ -1,5 +1,6 @@
 package org.irmacard.keyshare.web.users;
 
+import org.irmacard.keyshare.common.UserCandidate;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Users {
 	private static Logger logger = LoggerFactory.getLogger(Users.class);
@@ -55,24 +58,6 @@ public class Users {
 
 	static public User getUser(String username) {
 		return User.findFirst(User.USERNAME_FIELD + " = ?", username);
-	}
-
-	public static User verifyEmailAddress(String email) {
-		EmailAddress e = (EmailAddress) EmailAddress.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email).include(User.class).get(0);
-		if (e == null) return null;
-		e.verify();
-		return e.parent(User.class);
-	}
-
-	static public User getUserByEmail(String email) {
-		// TODO: can one email address be associated to multiple users?
-		LazyList<EmailAddress> users =  EmailAddress
-				.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE", email)
-				.include(User.class);
-
-		if (users.size() == 0)
-			return null;
-		return users.get(0).parent(User.class);
 	}
 
 	static public User getLoggedInUser(int user_id, String sessionid) {

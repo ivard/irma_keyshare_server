@@ -20,7 +20,10 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class User extends Model {
 	private static Logger logger = LoggerFactory.getLogger(User.class);
@@ -97,6 +100,13 @@ public class User extends Model {
 				> System.currentTimeMillis()/1000;
 
 		return valid && notExpired;
+	}
+
+	public long getLastSeen() {
+		List<LogEntryRecord> list = getAll(LogEntryRecord.class).orderBy("time desc").limit(1);
+		if (list.size() == 0)
+			return 0;
+		return list.get(0).getLong(LogEntryRecord.DATE_FIELD);
 	}
 
 	public String getUsername() {
@@ -207,8 +217,15 @@ public class User extends Model {
 
 	public void addEmailAddress(String email) {
 		// Don't insert duplicate email addresses
-		if (EmailAddress.count("emailAddress = ? and user_id = ?", email, getID()) == 0)
+		if (EmailAddress.count(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? and user_id = ?", email, getID()) == 0)
 			add(new EmailAddress(email));
+	}
+
+	public void verifyEmailAddress(String email) {
+		List<EmailAddress> emails = get(EmailAddress.class, EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email);
+		if (emails.size() == 0)
+			throw new KeyshareException(KeyshareError.USER_NOT_FOUND);
+		emails.get(0).verify();
 	}
 
 	public List<EmailAddress> getEmailAddresses() {

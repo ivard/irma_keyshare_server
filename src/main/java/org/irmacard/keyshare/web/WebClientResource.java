@@ -1,6 +1,7 @@
 package org.irmacard.keyshare.web;
 
 import com.google.gson.reflect.TypeToken;
+import com.mysql.jdbc.log.Log;
 import foundation.privacybydesign.common.ApiClient;
 import org.irmacard.api.common.*;
 import org.irmacard.api.common.disclosure.DisclosureProofResult;
@@ -8,12 +9,14 @@ import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.api.common.issuing.IssuingRequest;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
+import org.irmacard.keyshare.common.UserCandidate;
 import org.irmacard.keyshare.common.UserLoginMessage;
 import org.irmacard.keyshare.common.UserMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.email.EmailAddress;
 import org.irmacard.keyshare.web.email.EmailSender;
+import org.irmacard.keyshare.web.email.EmailVerificationRecord;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.RateLimit;
 import org.irmacard.keyshare.web.users.User;
@@ -26,11 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.lang.reflect.Type;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Path("web")
 public class WebClientResource {
@@ -77,6 +76,7 @@ public class WebClientResource {
 			u = Users.register(user);
 			u.addEmailAddress(u.getUsername());
 			EmailVerifier.verifyEmail(
+					u,
 					u.getUsername(),
 					conf.getRegisterEmailSubject(),
 					conf.getRegisterEmailBody(),
@@ -158,7 +158,7 @@ public class WebClientResource {
 		}
 
 		Historian.getInstance().recordLogin(true, false, conf.getClientIp(servletRequest));
-		return login(attrs.get(getEmailAttributeIdentifier()));
+		return getLoginResponse(Users.getValidUser(attrs.get(getEmailAttributeIdentifier())));
 	}
 
 	@GET
@@ -315,36 +315,93 @@ public class WebClientResource {
 	@GET
 	@Path("/enroll/{token}")
 	@RateLimit
-	public Response enroll(@PathParam("token") String token) throws URISyntaxException {
+	public Response enroll(@PathParam("token") String token) {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		Historian.getInstance().recordEmailVerified(conf.getClientIp(servletRequest));
-		return loginWithToken(token, true);
-	}
 
-	private Response loginWithToken(String token, boolean inEnrollment) {
-		String email = EmailVerifier.getVerifiedAddress(token);
-		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
-		if (email == null) {
+		// We are enrolling, so:
+		// - the user was just created,
+		// - as we are here the user clicked on a link sent to her email address,
+		//   so she opted to provide her email address,
+		// - this address was saved in the database when she enrolled as not yet verified,
+		// - she may already have logged in on MyIRMA and associated other (verified) email addresses.
+		// We need to lookup the email address she provided during enrollment, set it verified,
+		// and log her in.
+
+		EmailVerificationRecord record = EmailVerifier.findRecord(token);
+		if (record == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 
-		logger.info("Getting user object");
-		User u = inEnrollment ? Users.verifyEmailAddress(email) : Users.getUserByEmail(email);
+		// In case of enrollment, the email verification record should have a user_id parent
+		// so that out of all users that have this email address, we know which one is now enrolling.
+		User u = record.parent(User.class);
 		if (u == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
 			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 
+		u.verifyEmailAddress(record.getEmail());
 		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
-		return login(u.getUsername());
+		return getLoginResponse(u);
 	}
 
-	private Response login(String username) {
-		User user = Users.getValidUser(username);
+	@GET
+	@Path("/login/{token}")
+	@RateLimit
+	public Response oneTimePasswordLogin(@PathParam("token") String token) {
+		return oneTimePasswordLogin(token, null);
+	}
+
+	@GET
+	@Path("/login/{token}/{username}")
+	@RateLimit
+	public Response oneTimePasswordLogin(@PathParam("token") String token, @PathParam("username") String username) {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+
+		// Get email address verification record and all users that have this email address
+		EmailVerificationRecord record = EmailVerifier.findRecord(token);
+		if (record == null) {
+			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		List<EmailAddress> candidates = EmailAddress.find(record.getEmail());
+
+		int size = candidates.size();
+		User u = null; // The user to return if any
+
+		// Multiple users have this email address, but no username was specified
+		// Return a list of user candidates and don't mark the token as consumed
+		if (size > 1 && (username == null || username.length() == 0)) {
+			// Multiple users have this email address, return a list of them for the client to choose one from
+			List<UserCandidate> users = new ArrayList<>(size);
+			for (EmailAddress candidate : candidates) {
+				u = candidate.parent(User.class);
+				logger.warn("User last seen {}", u.getLastSeen());
+				users.add(new UserCandidate(u.getUsername(), u.getLastSeen()));
+			}
+			return Response.ok(new UserMessage(users)).build();
+		}
+
+		record.setVerified(); // This token is now consumed
+		if (size > 1) { // a username was specified, look it up
+			u = User.findFirst(User.USERNAME_FIELD + " = ?", username);
+		}
+		else if (size == 1) { // Only one user has this email address, just login the user immediately
+			u = candidates.get(0).parent(User.class);
+		}
+		// else if (size == 0) nop;
+
+		Historian.getInstance().recordLogin(u != null, true, conf.getClientIp(servletRequest));
+		if (u != null)
+			return getLoginResponse(u);
+		return Response.status(Response.Status.NOT_FOUND).build();
+	}
+
+	private Response getLoginResponse(User user) {
 		user.setEnrolled(true);
 		Users.getSessionForUser(user);
-
 		return getCookiePostResponse(user);
 	}
 
@@ -359,6 +416,7 @@ public class WebClientResource {
 			KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 			logger.info("Sending OTP to {}", email);
 			EmailVerifier.verifyEmail(
+					null,
 					email,
 					conf.getLoginEmailSubject(user.getLanguage()),
 					conf.getLoginEmailBody(user.getLanguage()),
@@ -372,13 +430,6 @@ public class WebClientResource {
 		// If we return nothing, null, the empty string, or a bare word
 		// jQuery consider the request to have failed. Fine. Have an empty object
 		return Response.accepted("{}").build();
-	}
-
-	@GET
-	@Path("/login/{token}")
-	@RateLimit
-	public Response oneTimePasswordLogin(@PathParam("token") String token) throws URISyntaxException {
-		return loginWithToken(token, false);
 	}
 
 	@GET

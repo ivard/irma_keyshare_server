@@ -52,6 +52,7 @@ public class ClientResource {
 			u.addEmailAddress(email);
 			if (conf.getCheckUserEnrolled()) {
 				EmailVerifier.verifyEmail(
+						u,
 						userData.getEmail(),
 						conf.getConfirmEmailSubject(lang),
 						conf.getConfirmEmailBody(lang),

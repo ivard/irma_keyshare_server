@@ -1,10 +1,13 @@
 package org.irmacard.keyshare.web.email;
 
 import org.irmacard.keyshare.web.KeyshareConfiguration;
+import org.irmacard.keyshare.web.users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.mail.internet.AddressException;
+
+import java.util.List;
 
 import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_TIMEOUT;
 import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_VALIDITY;
@@ -12,22 +15,25 @@ import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_VA
 public class EmailVerifier {
 	private static Logger logger = LoggerFactory.getLogger(EmailVerifier.class);
 
-	public static void verifyEmail(String email,
+	public static void verifyEmail(User u,
+	                               String email,
 	                               String subject,
 	                               String body,
 	                               String callback) throws AddressException {
-		verifyEmail(email, subject, body, callback, DEFAULT_TIMEOUT, DEFAULT_VALIDITY);
+		verifyEmail(u, email, subject, body, callback, DEFAULT_TIMEOUT, DEFAULT_VALIDITY);
 	}
 
-	public static void verifyEmail(String email,
+	public static void verifyEmail(User u,
+	                               String email,
 	                               String subject,
 	                               String body,
 	                               String callback,
 	                               int timeout) throws AddressException {
-		verifyEmail(email, subject, body, callback, timeout, DEFAULT_VALIDITY);
+		verifyEmail(u, email, subject, body, callback, timeout, DEFAULT_VALIDITY);
 	}
 
-	public static void verifyEmail(String email,
+	public static void verifyEmail(User u,
+	                               String email,
 	                               String subject,
 	                               String body,
 	                               String callback,
@@ -41,6 +47,8 @@ public class EmailVerifier {
 		}
 
 		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
+		if (u != null)
+			record.setParent(u);
 		String url = callback + record.getToken();
 		if (body.contains("%s"))
 			body = String.format(body, url);
@@ -50,19 +58,17 @@ public class EmailVerifier {
 		EmailSender.send(email, subject, body);
 	}
 
-	public static String getVerifiedAddress(String token) {
+	public static EmailVerificationRecord findRecord(String token) {
 		// An email verification link should work only once,
 		// so we check if time_verified has been set before.
-		EmailVerificationRecord record = EmailVerificationRecord.findFirst(
+		List<EmailVerificationRecord> list = EmailVerificationRecord.find(
 				"token = ? AND time_verified IS NULL AND time_created + timeout > ?",
 				token,
 				System.currentTimeMillis() / 1000
-		);
-		if (record == null)
+		).include(User.class);
+		if (list.size() == 0)
 			return null;
-
-		record.setVerified();
-		return record.getEmail();
+		return list.get(0);
 	}
 
 	public static boolean isAddressVerified(String email) {

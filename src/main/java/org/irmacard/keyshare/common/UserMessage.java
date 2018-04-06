@@ -1,5 +1,6 @@
 package org.irmacard.keyshare.common;
 
+import com.google.api.client.util.DateTime;
 import org.irmacard.keyshare.web.email.EmailAddress;
 
 import java.util.ArrayList;
@@ -14,7 +15,9 @@ public class UserMessage {
 	private boolean emailIssued;
 	private List<String> emailAddresses;
 
-	public UserMessage() {};
+	private List<UserCandidate> candidates;
+
+	public UserMessage() {}
 
 	public UserMessage(String username, String sessionToken, String ID, boolean enrolled, boolean enabled, boolean emailIssued, List<EmailAddress> emailAddresses) {
 		this.username = username;
@@ -29,6 +32,10 @@ public class UserMessage {
 			this.emailAddresses.add(addr.get());
 		}
 	}
+
+	public UserMessage(List<UserCandidate> candidates) {
+		this.candidates = candidates;
+	};
 
 	public String getUsername() {
 		return username;
@@ -80,5 +87,17 @@ public class UserMessage {
 
 	public List<String> getEmailAddresses() {
 		return emailAddresses;
+	}
+
+	public void setEmailAddresses(List<String> emailAddresses) {
+		this.emailAddresses = emailAddresses;
+	}
+
+	public List<UserCandidate> getCandidates() {
+		return candidates;
+	}
+
+	public void setCandidates(List<UserCandidate> candidates) {
+		this.candidates = candidates;
 	}
 }
