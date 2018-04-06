@@ -207,6 +207,18 @@ public class WebClientResource {
 	}
 
 	@POST
+	@Path("/users/{user_id}/remove_email/{email}")
+	public Response removeEmailAddress(@PathParam("user_id") int userID,
+	                                   @PathParam("email") String email,
+	                                   @CookieParam("sessionid") String sessionid) {
+		User u = Users.getLoggedInUser(userID, sessionid);
+		if (u == null)
+			return null;
+		u.removeEmailAddress(email);
+		return getCookiePostResponse(u);
+	}
+
+	@POST
 	@Path("/users/{user_id}/email_issued")
 	public Response setEmailAddressIssued(@PathParam("user_id") int userID,
 	                                      @CookieParam("sessionid") String sessionid) {

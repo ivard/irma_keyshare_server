@@ -221,6 +221,11 @@ public class User extends Model {
 			add(new EmailAddress(email));
 	}
 
+	public boolean removeEmailAddress(String email) {
+		List<EmailAddress> list = get(EmailAddress.class, EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email);
+		return list.size() != 0 && list.get(0).delete();
+	}
+
 	public void verifyEmailAddress(String email) {
 		List<EmailAddress> emails = get(EmailAddress.class, EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email);
 		if (emails.size() == 0)
