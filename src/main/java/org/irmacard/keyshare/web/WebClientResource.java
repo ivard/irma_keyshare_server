@@ -330,7 +330,7 @@ public class WebClientResource {
 		EmailVerificationRecord record = EmailVerifier.findRecord(token);
 		if (record == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
-			return Response.status(Response.Status.NOT_FOUND).build();
+			return Response.status(Response.Status.NOT_FOUND).build(); // TODO this should also redirect
 		}
 
 		// In case of enrollment, the email verification record should have a user_id parent
@@ -338,7 +338,7 @@ public class WebClientResource {
 		User u = record.parent(User.class);
 		if (u == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
-			return Response.status(Response.Status.NOT_FOUND).build();
+			return Response.status(Response.Status.NOT_FOUND).build(); // TODO this should also redirect
 		}
 
 		u.verifyEmailAddress(record.getEmail());
@@ -359,7 +359,7 @@ public class WebClientResource {
 		EmailVerificationRecord record = EmailVerifier.findRecord(token);
 		if (record == null) {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
-			return Response.status(Response.Status.NOT_FOUND).build();
+			return Response.status(Response.Status.NOT_FOUND).cookie(nullCookie("token")).build();
 		}
 
 		User u = null;
@@ -388,12 +388,10 @@ public class WebClientResource {
 
 		// Get email address verification record and all users that have this email address
 		EmailVerificationRecord record = EmailVerifier.findRecord(token);
-		if (record == null) {
-			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
-			return Response.status(Response.Status.NOT_FOUND).build();
-		}
-		List<EmailAddress> candidates = EmailAddress.find(record.getEmail());
+		if (record == null)
+			return finishLogin(null, username != null);
 
+		List<EmailAddress> candidates = EmailAddress.find(record.getEmail());
 		int size = candidates.size();
 		User u = null; // The user to return if any
 
@@ -410,19 +408,31 @@ public class WebClientResource {
 			u = candidates.get(0).parent(User.class);
 		}
 		// else if (size == 0) nop;
+		return finishLogin(u, username != null);
+	}
 
-		Historian.getInstance().recordLogin(u != null, true, conf.getClientIp(servletRequest));
-		if (u == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
+	private Response finishLogin(User u, boolean isWebclient) throws URISyntaxException {
+		boolean success = u != null;
+		Historian.getInstance().recordLogin(success, true, KeyshareConfiguration.getInstance().getClientIp(servletRequest));
 
-		loginUser(u);
+		if (success)
+			loginUser(u);
 
 		Response.ResponseBuilder builder = null;
-		if (username == null)
+		if (!isWebclient)
 			builder = Response.temporaryRedirect(new URI(KeyshareConfiguration.getInstance().getWebclientUrl()));
-		else
-			builder = Response.ok("OK");
-		return builder.cookie(getSessionCookie(u, nullCookie("token"))).build();
+		else {
+			if (success)
+				builder = Response.ok("OK");
+			else
+				builder = Response.status(Response.Status.NOT_FOUND);
+		}
+
+		builder.cookie(nullCookie("token"));
+		if (success)
+			builder.cookie(getSessionCookie(u));
+
+		return builder.build();
 	}
 
 	private Response getMultipleCandidatesRedirectResponse(String token) throws URISyntaxException {
