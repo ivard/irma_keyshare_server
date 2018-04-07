@@ -26,6 +26,9 @@ public enum KeyshareError {
 	USER_NOT_FOUND(404, "Cannot find user"),
 	USER_SESSION_INVALID(401, "Session expired"),
 
+	ISSUANCE_SESSION_FAILED(503, "Failed to start IRMA issuance session"),
+	DISCLOSURE_SESSION_FAILED(503, "Failed to start IRMA disclosure session"),
+
 	// Any other exception
 	EXCEPTION(500, "Encountered unexpected problem");
 

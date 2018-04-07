@@ -4,10 +4,13 @@ import foundation.privacybydesign.common.ApiClient;
 import org.bouncycastle.util.encoders.Base64;
 import org.irmacard.api.common.ClientQr;
 import org.irmacard.api.common.CredentialRequest;
+import org.irmacard.api.common.exceptions.ApiException;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.api.common.issuing.IssuingRequest;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.irmacard.keyshare.common.UserLoginMessage;
+import org.irmacard.keyshare.common.exceptions.KeyshareError;
+import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.email.EmailVerifier;
 import org.irmacard.keyshare.web.filters.RateLimit;
 import org.irmacard.keyshare.web.users.User;
@@ -15,6 +18,7 @@ import org.irmacard.keyshare.web.users.Users;
 
 import javax.mail.internet.AddressException;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,7 +43,7 @@ public class ClientResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RateLimit
-	public ClientQr userSelfEnroll(UserLoginMessage userData) throws AddressException {
+	public ClientQr userSelfEnroll(@NotNull UserLoginMessage userData) throws AddressException {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		Historian.getInstance().recordRegistration(false, conf.getClientIp(servletRequest));
 
@@ -60,7 +64,7 @@ public class ClientResource {
 
 		// Construct request for login credential
 		ArrayList<CredentialRequest> credentials = new ArrayList<>(2);
-		HashMap<String,String> attrs = new HashMap<>(1);
+		HashMap<String, String> attrs = new HashMap<>(1);
 		attrs.put(conf.getLoginAttribute(), u.getUsername());
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.YEAR, 10); // TODO magic number
@@ -82,10 +86,16 @@ public class ClientResource {
 				conf.getJwtAlgorithm(),
 				conf.getJwtPrivateKey()
 		);
-		return ApiClient.createApiSession(
-				KeyshareConfiguration.getInstance().getApiServerUrl() + "irma_api_server/api/v2/issue/",
-				jwt
-		);
+		try {
+			return ApiClient.createApiSession(
+					KeyshareConfiguration.getInstance().getApiServerUrl() + "irma_api_server/api/v2/issue/",
+					jwt
+			);
+		} catch (ApiException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new KeyshareException(KeyshareError.ISSUANCE_SESSION_FAILED, e.getMessage());
+		}
 	}
 
 	private static String generateUsername() {

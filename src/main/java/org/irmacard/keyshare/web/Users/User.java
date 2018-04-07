@@ -51,6 +51,9 @@ public class User extends Model {
 	public static final String PINBLOCK_DATE = "pinblockDate";
 
 	public User(String username, String password, String pin, BigInteger secret, PublicKey publicKey) {
+		if (!checkInput(pin, publicKey))
+			throw new KeyshareException(KeyshareError.MALFORMED_INPUT);
+
 		setString(USERNAME_FIELD, username);
 		setString(PASSWORD_FIELD, password);
 		setString(PIN_FIELD, pin);
@@ -64,6 +67,13 @@ public class User extends Model {
 		setBoolean(ENABLED_FIELD, true);
 		setBoolean(EMAILISSUED_FIELD, false);
 		saveIt();
+	}
+
+	private boolean checkInput(String pin, PublicKey publicKey) {
+		return publicKey != null && publicKey.getN() != null && publicKey.getG() != null
+				&& pin != null
+				&& pin.length() == 44               // Length of SHA256 in Base64
+				&& pin.charAt(pin.length()) == '='; // Last 6 bits are always zero
 	}
 
 	public User(String username, String password, String pin, PublicKey publicKey) {
