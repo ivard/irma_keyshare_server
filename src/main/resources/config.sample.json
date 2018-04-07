@@ -40,13 +40,36 @@
 
     // Check if users have verified their e-mail address and aren't blocked
     // This MUST be enabled for production use, but can be disabled for unit tests like those from irmago
-    "check_user_enrolled": "true",
+    "check_user_enrolled": true,
 
-    // Settings for email issueing
-    "email_issuer": "test",
-    "email_login_credential": "mijnirma",
-    "email_login_attribute": "email",
+    // Settings for attribute issueing
+    "issuer": "test",
+    "email_credential": "email",
+    "email_attribute": "email",
+    "login_credential": "mijnirma",
+    "login_attribute": "username",
 
     // URL to API server to start authentication sessions with
-    "apiserver_url": ""
+    "apiserver_url": "",
+
+    // URL to this server for verification links in emails
+    "url": "http://localhost:8080/irma_keyshare_server/api/v1",
+
+    // Login and registration emails
+    "login_email_subject": {
+        "en": "Log in at MyIRMA",
+        "nl": "Log in op MijnIRMA"
+    },
+    "login_email_body": {
+        "en": "Dear IRMA user,\n\nClick on the following link to login at MyIRMA.",
+        "nl": "Beste IRMA-gebruiker,\n\nKlik op onderstaande link om in te loggen op MijnIRMA."
+    },
+    "confirm_email_subject": {
+        "en": "Confirm MyIRMA email adress",
+        "nl": "Bevestig MijnIRMA e-mailadres"
+    },
+    "confirm_email_body": {
+        "en": "Dear IRMA user,\n\nWelcom to IRMA!",
+        "nl": "Beste IRMA-gebruiker,\n\nWelkom bij IRMA!"
+    },
 }
