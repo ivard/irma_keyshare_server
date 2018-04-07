@@ -95,7 +95,9 @@ public class GsonJerseyProvider implements MessageBodyWriter<Object>, MessageBod
 			if (servletConfig.getServletName().equals(KeyshareApplication.VERSION2)) {
 				return gson2.fromJson(streamReader, genericType);
 			} else {
-				return gson1.fromJson(streamReader, genericType);
+				Object o = gson1.fromJson(streamReader, genericType);
+				System.out.println(gson1.toJson(o, genericType));
+				return o;
 			}
 		} catch (JsonParseException e) {
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, e.getMessage());
@@ -125,6 +127,7 @@ public class GsonJerseyProvider implements MessageBodyWriter<Object>, MessageBod
 				gson2.toJson(object, genericType, writer);
 			} else {
 				gson1.toJson(object, genericType, writer);
+				System.out.println(gson1.toJson(object, genericType));
 			}
 		}
 	}

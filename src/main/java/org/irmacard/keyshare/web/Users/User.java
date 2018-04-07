@@ -216,9 +216,13 @@ public class User extends Model {
 	}
 
 	public void addEmailAddress(String email) {
+		addEmailAddress(email, false); // TODO not used? remove verified column?
+	}
+
+	public void addEmailAddress(String email, boolean verified) {
 		// Don't insert duplicate email addresses
 		if (EmailAddress.count(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? and user_id = ?", email, getID()) == 0)
-			add(new EmailAddress(email));
+			add(new EmailAddress(email, verified));
 	}
 
 	public boolean removeEmailAddress(String email) {
@@ -234,7 +238,7 @@ public class User extends Model {
 	}
 
 	public List<EmailAddress> getEmailAddresses() {
-		return getAll(EmailAddress.class);
+		return get(EmailAddress.class, EmailAddress.VERIFIED_FIELD + " = TRUE");
 	}
 
 	public LogEntryList getLogs(long start) {
@@ -289,7 +293,8 @@ public class User extends Model {
 	}
 
 	public boolean getEmailAddressIssued() {
-		return getBoolean(EMAILISSUED_FIELD);
+		return EmailAddress.count("user_id = ?", getID()) == 0 // Check if there is anything to issue
+			|| getBoolean(EMAILISSUED_FIELD);
 	}
 
 	private int getPinblockLevel() {

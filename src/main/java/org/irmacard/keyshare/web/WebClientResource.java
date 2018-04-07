@@ -64,7 +64,7 @@ public class WebClientResource {
 		return true;
 	}
 
-	// TODO Move this elsewhere? This is done by the app, not by the webclient
+	// TODO remove this when deprecating old registration flow
 	@POST @Path("/users/selfenroll")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -75,7 +75,6 @@ public class WebClientResource {
 		if (u == null || !u.isEnrolled()) {
 			Historian.getInstance().recordRegistration(false, conf.getClientIp(servletRequest));
 			u = Users.register(user);
-			u.addEmailAddress(u.getUsername());
 			EmailVerifier.verifyEmail(
 					u,
 					u.getUsername(),
@@ -101,16 +100,29 @@ public class WebClientResource {
 	public ClientQr getAuthenticationQr() {
 		return ApiClient.createApiSession(
 				KeyshareConfiguration.getInstance().getApiServerUrl() + "irma_api_server/api/v2/verification/",
-				getEmailDisclosureJwt()
+				getLoginDisclosureJwt()
 		);
 	}
 
 	@GET
 	@Path("/login-irma")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String getEmailDisclosureJwt() {
+	public String getLoginDisclosureJwt() {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
-		list.add(new AttributeDisjunction("E-mail address", getEmailAttributeIdentifier()));
+		list.add(new AttributeDisjunction("Username", getLoginAttributeIdentifier()));
+		return ApiClient.getDisclosureJWT(
+				list,
+				KeyshareConfiguration.getInstance().getServerName(),
+				KeyshareConfiguration.getInstance().getHumanReadableName(),
+				KeyshareConfiguration.getInstance().getJwtAlgorithm(),
+				KeyshareConfiguration.getInstance().getJwtPrivateKey()
+		);
+	}
+
+	private String getEmailDisclosureJwt() {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
+		list.add(new AttributeDisjunction("Email address", getEmailAttributeIdentifier()));
 		return ApiClient.getDisclosureJWT(
 				list,
 				KeyshareConfiguration.getInstance().getServerName(),
@@ -123,11 +135,16 @@ public class WebClientResource {
 	private AttributeIdentifier getEmailAttributeIdentifier() {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		return new AttributeIdentifier(
-				new CredentialIdentifier(
-						conf.getSchemeManager(),
-						conf.getEmailIssuer(),
-						conf.getEmailLoginCredential()),
-				conf.getEmailLoginAttribute()
+				new CredentialIdentifier(conf.getSchemeManager(), conf.getIssuer(), conf.getEmailCredential()),
+				conf.getEmailAttribute()
+		);
+	}
+
+	private AttributeIdentifier getLoginAttributeIdentifier() {
+		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
+		return new AttributeIdentifier(
+				new CredentialIdentifier(conf.getSchemeManager(), conf.getIssuer(), conf.getLoginCredential()),
+				conf.getLoginAttribute()
 		);
 	}
 
@@ -159,22 +176,9 @@ public class WebClientResource {
 		}
 
 		Historian.getInstance().recordLogin(true, false, conf.getClientIp(servletRequest));
-		User user = Users.getValidUser(attrs.get(getEmailAttributeIdentifier()));
+		User user = Users.getValidUser(attrs.get(getLoginAttributeIdentifier()));
 		loginUser(user);
 		return getCookiePostResponse(user);
-	}
-
-	@GET
-	@Path("/users/{user_id}/test_email")
-	@Produces(MediaType.TEXT_PLAIN)
-	@RateLimit
-	public String getEmailTestJwt(@PathParam("user_id") int userID,
-	                              @CookieParam("sessionid") String sessionid) {
-		User u = Users.getLoggedInUser(userID, sessionid);
-		if(u == null)
-			return null;
-
-		return getEmailDisclosureJwt();
 	}
 
 	@GET
@@ -202,7 +206,7 @@ public class WebClientResource {
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT, "Invalid IRMA proof");
 		}
 
-		u.addEmailAddress(attrs.get(getEmailAttributeIdentifier()));
+		u.addEmailAddress(attrs.get(getEmailAttributeIdentifier()), true);
 		return getCookiePostResponse(u);
 	}
 
@@ -251,7 +255,7 @@ public class WebClientResource {
 				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
 				new CredentialIdentifier(
 						conf.getSchemeManager(),
-						conf.getEmailIssuer(),
+						conf.getIssuer(),
 						conf.getEmailCredential()
 				),
 				attrs
@@ -340,8 +344,7 @@ public class WebClientResource {
 			Historian.getInstance().recordLogin(false, true, conf.getClientIp(servletRequest));
 			return Response.status(Response.Status.NOT_FOUND).build(); // TODO this should also redirect
 		}
-
-		u.verifyEmailAddress(record.getEmail());
+		u.addEmailAddress(record.getEmail(), true);
 		loginUser(u);
 		Historian.getInstance().recordLogin(true, true, conf.getClientIp(servletRequest));
 		return Response

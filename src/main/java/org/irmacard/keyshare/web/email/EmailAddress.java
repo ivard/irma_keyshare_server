@@ -13,8 +13,12 @@ public class EmailAddress extends Model {
 	public EmailAddress() {}
 
 	public EmailAddress(String email) {
+		this(email, false);
+	}
+
+	public EmailAddress(String email, boolean verified) {
 		setString(EMAIL_ADDRESS_FIELD, email);
-		setBoolean(VERIFIED_FIELD, false);
+		setBoolean(VERIFIED_FIELD, verified);
 		saveIt();
 	}
 

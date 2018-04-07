@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.mail.internet.AddressException;
-
 import java.util.List;
 
 import static org.irmacard.keyshare.web.email.EmailVerificationRecord.DEFAULT_TIMEOUT;
@@ -47,8 +46,10 @@ public class EmailVerifier {
 		}
 
 		EmailVerificationRecord record = new EmailVerificationRecord(email, timeout, validity);
-		if (u != null)
+		if (u != null) {
 			record.setParent(u);
+			record.saveIt();
+		}
 		String url = callback + record.getToken();
 		if (body.contains("%s"))
 			body = String.format(body, url);

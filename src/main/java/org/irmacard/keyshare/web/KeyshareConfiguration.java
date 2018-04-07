@@ -43,11 +43,11 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 	private String url = "http://localhost:8080/irma_keyshare_server/api/v1";
 
 	private String scheme_manager = "";
-	private String email_issuer = "";
+	private String issuer = "";
 	private String email_credential = "";
 	private String email_attribute = "";
-	private String email_login_credential = "";
-	private String email_login_attribute = "";
+	private String login_credential = "";
+	private String login_attribute = "";
 
 	private String register_email_subject = "Verify your email address";
 	private String register_email_body = "To finish registering to the keyshare server, please click on the link below.";
@@ -133,8 +133,8 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 		return scheme_manager;
 	}
 
-	public String getEmailIssuer() {
-		return email_issuer;
+	public String getIssuer() {
+		return issuer;
 	}
 
 	public String getEmailCredential() {
@@ -145,12 +145,12 @@ public class KeyshareConfiguration extends BaseConfiguration<KeyshareConfigurati
 		return email_attribute;
 	}
 
-	public String getEmailLoginCredential() {
-		return email_login_credential;
+	public String getLoginCredential() {
+		return login_credential;
 	}
 
-	public String getEmailLoginAttribute() {
-		return email_login_attribute;
+	public String getLoginAttribute() {
+		return login_attribute;
 	}
 
 	public String getRegisterEmailSubject() {
