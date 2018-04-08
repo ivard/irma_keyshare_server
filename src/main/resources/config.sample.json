@@ -47,7 +47,7 @@
     "email_credential": "email",
     "email_attribute": "email",
     "login_credential": "mijnirma",
-    "login_attribute": "username",
+    "login_attribute": "email",
 
     // URL to API server to start authentication sessions with
     "apiserver_url": "",
