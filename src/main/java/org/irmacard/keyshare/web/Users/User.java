@@ -72,8 +72,7 @@ public class User extends Model {
 	private boolean checkInput(String pin, PublicKey publicKey) {
 		return publicKey != null && publicKey.getN() != null && publicKey.getG() != null
 				&& pin != null
-				&& pin.length() == 44               // Length of SHA256 in Base64
-				&& pin.charAt(pin.length()) == '='; // Last 6 bits are always zero
+				&& pin.length() > 44; // Length of SHA256 in Base64 plus =\n
 	}
 
 	public User(String username, String password, String pin, PublicKey publicKey) {
