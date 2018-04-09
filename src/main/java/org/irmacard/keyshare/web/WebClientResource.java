@@ -247,19 +247,33 @@ public class WebClientResource {
 		KeyshareConfiguration conf = KeyshareConfiguration.getInstance();
 		ArrayList<CredentialRequest> credentials = new ArrayList<>(2);
 		HashMap<String,String> attrs = new HashMap<>(1);
-
-		attrs.put(conf.getEmailAttribute(), u.getEmailAddresses().get(0).get());
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.YEAR, 1);
+		int time = (int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true);
+		String email = u.getEmailAddresses().get(0).get();
+
+		attrs.put(conf.getEmailAttribute(), email);
 		credentials.add(new CredentialRequest(
-				(int) CredentialRequest.floorValidityDate(calendar.getTimeInMillis(), true),
-				new CredentialIdentifier(
+				time, new CredentialIdentifier(
 						conf.getSchemeManager(),
 						conf.getIssuer(),
 						conf.getEmailCredential()
 				),
 				attrs
 		));
+		if (u.old()) {
+			// In this case the MyIRMA credential has not been auto-issued
+			attrs.clear();
+			attrs.put(conf.getLoginAttribute(), email);
+			credentials.add(new CredentialRequest(
+					time, new CredentialIdentifier(
+							conf.getSchemeManager(),
+							conf.getIssuer(),
+							conf.getLoginCredential()
+					),
+					attrs
+			));
+		}
 
 		IdentityProviderRequest ipRequest = new IdentityProviderRequest("", new IssuingRequest(null, null, credentials), 120);
 		return ApiClient.getSignedIssuingJWT(ipRequest,

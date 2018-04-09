@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class User extends Model {
 	private static Logger logger = LoggerFactory.getLogger(User.class);
@@ -348,5 +349,9 @@ public class User extends Model {
 		if (b == 1)        return a;
 		if (b%2 == 0)      return     pow (a * a, b/2); // even a=(a^2)^b/2
 		else               return a * pow (a * a, b/2); // odd  a=a*(a^2)^b/2
+	}
+
+	public boolean old() {
+		return Pattern.compile("^.+@.+\\..+$").matcher(getUsername()).find();
 	}
 }
