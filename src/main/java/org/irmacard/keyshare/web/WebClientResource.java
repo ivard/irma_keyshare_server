@@ -371,6 +371,7 @@ public class WebClientResource {
 		List<UserCandidate> users = new ArrayList<>(candidates.size());
 		for (EmailAddress candidate : candidates) {
 			u = candidate.parent(User.class);
+			if (u == null) continue;
 			users.add(new UserCandidate(u.getUsername(), u.getLastSeen()));
 		}
 		return Response.ok(users).build();

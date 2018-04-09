@@ -334,8 +334,7 @@ public class User extends Model {
 	}
 
 	public void unregister() {
-		LogEntryRecord.delete("user_id = ?", getID());
-		delete();
+		deleteCascade();
 	}
 
 
