@@ -7,23 +7,12 @@ import java.util.List;
 
 public class EmailAddress extends Model {
 	public static final String EMAIL_ADDRESS_FIELD = "emailAddress";
-	public static final String VERIFIED_FIELD = "verified";
 
 	// ActiveJDBC needs a default constructor
 	public EmailAddress() {}
 
 	public EmailAddress(String email) {
-		this(email, false);
-	}
-
-	public EmailAddress(String email, boolean verified) {
 		setString(EMAIL_ADDRESS_FIELD, email);
-		setBoolean(VERIFIED_FIELD, verified);
-		saveIt();
-	}
-
-	public void verify() {
-		setBoolean(VERIFIED_FIELD, true);
 		saveIt();
 	}
 
@@ -32,9 +21,8 @@ public class EmailAddress extends Model {
 	}
 
 	public static List<EmailAddress> find(String email) {
-		return EmailAddress.find(
-						EmailAddress.EMAIL_ADDRESS_FIELD + " = ? AND " + EmailAddress.VERIFIED_FIELD + " = TRUE",
-						email)
+		return EmailAddress
+				.find(EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email)
 				.include(User.class);
 	}
 }

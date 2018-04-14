@@ -232,7 +232,7 @@ public class User extends Model {
 	public void addEmailAddress(String email, boolean verified) {
 		// Don't insert duplicate email addresses
 		if (EmailAddress.count(EmailAddress.EMAIL_ADDRESS_FIELD + " = ? and user_id = ?", email, getID()) == 0)
-			add(new EmailAddress(email, verified));
+			add(new EmailAddress(email));
 	}
 
 	public boolean removeEmailAddress(String email) {
@@ -240,15 +240,8 @@ public class User extends Model {
 		return list.size() != 0 && list.get(0).delete();
 	}
 
-	public void verifyEmailAddress(String email) {
-		List<EmailAddress> emails = get(EmailAddress.class, EmailAddress.EMAIL_ADDRESS_FIELD + " = ?", email);
-		if (emails.size() == 0)
-			throw new KeyshareException(KeyshareError.USER_NOT_FOUND);
-		emails.get(0).verify();
-	}
-
 	public List<EmailAddress> getEmailAddresses() {
-		return get(EmailAddress.class, EmailAddress.VERIFIED_FIELD + " = TRUE");
+		return getAll(EmailAddress.class);
 	}
 
 	public LogEntryList getLogs(long start) {

@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS email_addresses
     id int unsigned NOT NULL auto_increment PRIMARY KEY,
     user_id int unsigned,
     emailAddress varchar(128),
-    verified boolean,
     INDEX (`emailAddress`)
 );
 
