@@ -1,6 +1,8 @@
 # IRMA keyshare server
 
-The IRMA keyshare server is a server that performs a share of the IRMA cryptography, so as to better protect the keys on the phone. It is meant to work together with the [IRMA mobile app](https://github.com/privacybydesign/irma_mobile).
+The IRMA keyshare server performs a share of the IRMA cryptography during IRMA sessions, in order to better protect the IRMA secret key on the phone. It does this by keeping a part of the IRMA user's secret key, and using this to cooperate in the IRMA protocol if and only if the user enters the correct PIN code. It is meant to work together with the [IRMA mobile app](https://github.com/privacybydesign/irma_mobile). In addition, this server exposes an API that is used by the [IRMA keyshare webclient](https://github.com/privacybydesign/irma_keyshare_webclient), on which the user can administer her account at this server.
+
+The keyshare protocol between the IRMA user and this server is documented [here](https://credentials.github.io/protocols/keyshare-protocol/).
 
 ## Configuring the server
 
@@ -59,13 +61,3 @@ For development, it can be useful to 'catch' every e-mail that is sent by the se
 The gradle build file should take care of the dependencies. To run the server in development mode simply call:
 
     gradle appRun --no-daemon
-
-## Server API
-
-The following describes the API offered by the server to an IRMA client.
-
-### Register
-
-Before the server can be used for any IRMA protocols, a client needs to register itself with the server.
-
-<!-- vim: set ts=4 sw=4: -->
