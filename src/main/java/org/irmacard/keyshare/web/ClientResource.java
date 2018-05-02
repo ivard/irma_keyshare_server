@@ -52,14 +52,17 @@ public class ClientResource {
 		User u = Users.register(userData, true);
 
 		String email = userData.getEmail();
-		if (conf.getCheckUserEnrolled() && email != null && email.length() > 0) {
-			EmailVerifier.verifyEmail(
+		if (email != null && email.length() > 0) {
+			if (conf.getCheckUserEnrolled())
+				EmailVerifier.verifyEmail(
 					u,
 					userData.getEmail(),
 					conf.getConfirmEmailSubject(lang),
 					conf.getConfirmEmailBody(lang),
 					conf.getUrl() + "/web/enroll/"
 			);
+		} else {
+			u.setEmailAddressIssued();
 		}
 
 		// Construct request for login credential
