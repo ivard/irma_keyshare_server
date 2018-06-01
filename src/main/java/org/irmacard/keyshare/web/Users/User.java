@@ -154,6 +154,11 @@ public class User extends Model {
 		return getString(PIN_FIELD);
 	}
 
+	public void setPIN(String newpin) {
+		setString(PIN_FIELD, newpin);
+		saveIt();
+	}
+
 	public int getPinCounter() {
 		return getInteger(PINCOUNTER_FIELD);
 	}
@@ -338,10 +343,10 @@ public class User extends Model {
 	// http://stackoverflow.com/a/20984477
 	public static long pow(long a, int b)
 	{
-		if (b == 0)        return 1;
-		if (b == 1)        return a;
-		if (b%2 == 0)      return     pow (a * a, b/2); // even a=(a^2)^b/2
-		else               return a * pow (a * a, b/2); // odd  a=a*(a^2)^b/2
+		if (b == 0)		return 1;
+		if (b == 1)		return a;
+		if (b%2 == 0)	  return	 pow (a * a, b/2); // even a=(a^2)^b/2
+		else			   return a * pow (a * a, b/2); // odd  a=a*(a^2)^b/2
 	}
 
 	public boolean old() {
