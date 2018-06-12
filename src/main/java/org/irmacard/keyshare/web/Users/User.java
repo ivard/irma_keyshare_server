@@ -154,8 +154,8 @@ public class User extends Model {
 		return getString(PIN_FIELD);
 	}
 
-	public void setPIN(String newpin) {
-		setString(PIN_FIELD, newpin);
+	public void setPIN(String newPin) {
+		setString(PIN_FIELD, newPin);
 		saveIt();
 	}
 

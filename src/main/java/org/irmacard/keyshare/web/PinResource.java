@@ -2,7 +2,7 @@ package org.irmacard.keyshare.web;
 
 import org.irmacard.keyshare.common.KeyshareResult;
 import org.irmacard.keyshare.common.PinTokenMessage;
-import org.irmacard.keyshare.common.PinchangeTokenMessage;
+import org.irmacard.keyshare.common.ChangePinTokenMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.users.LogEntryType;
@@ -62,7 +62,7 @@ public class PinResource extends BaseVerifier {
 	@Path("/change/pin")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public KeyshareResult pinchange(PinchangeTokenMessage msg) {
+	public KeyshareResult pinchange(ChangePinTokenMessage msg) {
 		logger.info("Changing PIN for user {}", msg.getID());
 
 		KeyshareResult result;
@@ -75,7 +75,7 @@ public class PinResource extends BaseVerifier {
 		if (!u.isEnrolled())
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
-		if (!u.checkAndCountPin(msg.getOldpin())) {
+		if (!u.checkAndCountPin(msg.getOldPin())) {
 			if (!u.isPinBlocked()) {
 				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
 			} else {
@@ -83,7 +83,7 @@ public class PinResource extends BaseVerifier {
 				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
 			}
 		} else {
-			u.setPIN(msg.getNewpin());
+			u.setPIN(msg.getNewPin());
 			result = new KeyshareResult(KeyshareResult.STATUS_SUCCESS, "");
 		}
 
