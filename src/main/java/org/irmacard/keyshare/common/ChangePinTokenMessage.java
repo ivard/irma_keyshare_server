@@ -1,8 +1,8 @@
 package org.irmacard.keyshare.common;
 
 public class ChangePinTokenMessage extends TokenMessage {
-	private String oldPin;
-	private String newPin;
+	private String oldpin;
+	private String newpin;
 
 	public ChangePinTokenMessage() {
 		super();
@@ -10,23 +10,23 @@ public class ChangePinTokenMessage extends TokenMessage {
 
 	public ChangePinTokenMessage(String id, String oldPin, String newPin) {
 		super(id);
-		this.oldPin = oldPin;
-		this.newPin = newPin;
+		this.oldpin = oldPin;
+		this.newpin = newPin;
 	}
 
 	public void setOldPin(String oldPin) {
-		this.oldPin = oldPin;
+		this.oldpin = oldPin;
 	}
 
 	public String getOldPin() {
-		return oldPin;
+		return oldpin;
 	}
 
 	public void setNewPin(String newPin) {
-		this.newPin = newPin;
+		this.newpin = newPin;
 	}
 
 	public String getNewPin() {
-		return newPin;
+		return newpin;
 	}
 }
