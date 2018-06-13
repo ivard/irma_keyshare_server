@@ -154,6 +154,11 @@ public class User extends Model {
 		return getString(PIN_FIELD);
 	}
 
+	public void setPIN(String newPin) {
+		setString(PIN_FIELD, newPin);
+		saveIt();
+	}
+
 	public int getPinCounter() {
 		return getInteger(PINCOUNTER_FIELD);
 	}

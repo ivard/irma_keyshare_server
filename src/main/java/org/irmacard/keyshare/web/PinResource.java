@@ -2,6 +2,7 @@ package org.irmacard.keyshare.web;
 
 import org.irmacard.keyshare.common.KeyshareResult;
 import org.irmacard.keyshare.common.PinTokenMessage;
+import org.irmacard.keyshare.common.ChangePinTokenMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.users.LogEntryType;
@@ -52,6 +53,38 @@ public class PinResource extends BaseVerifier {
 			String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
 					KeyshareConfiguration.getInstance().getPinExpiry());
 			result = new KeyshareResult(KeyshareResult.STATUS_SUCCESS, jwt);
+		}
+
+		return result;
+	}
+
+	@POST
+	@Path("/change/pin")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public KeyshareResult pinchange(ChangePinTokenMessage msg) {
+		logger.info("Changing PIN for user {}", msg.getID());
+
+		KeyshareResult result;
+		User u = Users.getValidUser(msg.getID());
+
+		if (!u.isEnabled()) {
+			u.addLog(LogEntryType.PIN_CHECK_REFUSED);
+			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
+		}
+		if (!u.isEnrolled())
+			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
+
+		if (!u.checkAndCountPin(msg.getOldPin())) {
+			if (!u.isPinBlocked()) {
+				result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
+			} else {
+				Historian.getInstance().recordPinBlocked(KeyshareConfiguration.getInstance().getClientIp(servletRequest));
+				result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
+			}
+		} else {
+			u.setPIN(msg.getNewPin());
+			result = new KeyshareResult(KeyshareResult.STATUS_SUCCESS, "");
 		}
 
 		return result;
