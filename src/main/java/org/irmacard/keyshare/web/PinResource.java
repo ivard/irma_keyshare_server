@@ -37,7 +37,8 @@ public class PinResource extends BaseVerifier {
 
 		if(!u.isEnabled()) {
 			u.addLog(LogEntryType.PIN_CHECK_REFUSED);
-			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
+			result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
+			return result;
 		}
 		if(!u.isEnrolled())
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
@@ -70,7 +71,8 @@ public class PinResource extends BaseVerifier {
 
 		if (!u.isEnabled()) {
 			u.addLog(LogEntryType.PIN_CHECK_REFUSED);
-			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
+			result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
+			return result;
 		}
 		if (!u.isEnrolled())
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
