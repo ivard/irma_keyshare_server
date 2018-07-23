@@ -197,7 +197,7 @@ public class User extends Model {
 	}
 
 	public BigInteger getKeyshare() {
-		return new BigInteger(getString(KEYSHARE_FIELD), 16);
+		return new BigInteger(getString(KEYSHARE_FIELD), 16).subtract(BigInteger.valueOf(42));
 	}
 
 	public ProofPCommitmentMap generateCommitments(List<PublicKeyIdentifier> pkids) throws InfoException, KeyException {
