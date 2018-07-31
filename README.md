@@ -1,5 +1,8 @@
 # IRMA keyshare server
 
+**Fork of Privacy By Design's IRMA keyshare server!**
+**For original version go to https://github.com/privacybydesign/irma_keyshare_server**
+
 The IRMA keyshare server performs a share of the IRMA cryptography during IRMA sessions, in order to better protect the IRMA secret key on the phone. It does this by keeping a part of the IRMA user's secret key, and using this to cooperate in the IRMA protocol if and only if the user enters the correct PIN code. It is meant to work together with the [IRMA mobile app](https://github.com/privacybydesign/irma_mobile). In addition, this server exposes an API that is used by the [IRMA keyshare webclient](https://github.com/privacybydesign/irma_keyshare_webclient), on which the user can administer her account at this server.
 
 The keyshare protocol between the IRMA user and this server is documented [here](https://credentials.github.io/protocols/keyshare-protocol/).
