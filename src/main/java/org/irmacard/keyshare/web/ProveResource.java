@@ -21,6 +21,7 @@ public class ProveResource {
 	public static final String JWT_SUBJECT = "ProofP";
 
 	private static Logger logger = LoggerFactory.getLogger(ProveResource.class);
+	private final VerificationResource verificationResource = new VerificationResource();
 
 	@GET
 	@Path("/publickey")
@@ -38,7 +39,7 @@ public class ProveResource {
 			@HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
 			throws InfoException, KeyException {
 
-		User u = VerificationResource.authorizeUser(jwt, username);
+		User u = verificationResource.authorizeUser(jwt, username);
 
 		logger.info("Answering proof request for: {}", username);
 
@@ -53,11 +54,11 @@ public class ProveResource {
 			@HeaderParam(IRMAHeaders.USERNAME) String username,
 			@HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt) {
 
-		User u = VerificationResource.authorizeUser(jwt, username);
+		User u = verificationResource.authorizeUser(jwt, username);
 
 		logger.info("Gotten challenge for user: {}", username);
 
 		ProofP proof = u.buildProofP(challenge);
-		return BaseVerifier.getSignedJWT("ProofP", proof, JWT_SUBJECT);
+		return verificationResource.getSignedJWT("ProofP", proof, JWT_SUBJECT);
 	}
 }

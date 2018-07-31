@@ -30,11 +30,15 @@ public class BaseVerifier {
 
 	public static final String[] authOptions = {"pin"};
 
-	protected static String getSignedJWT(String key, Object object, String subject) {
+	protected String getJWTSubject() {
+	    return JWT_SUBJECT;
+    }
+
+	protected String getSignedJWT(String key, Object object, String subject) {
 		return getSignedJWT(key, object, subject, 0);
 	}
 
-	protected static String getSignedJWT(String key, Object object, String subject, int expiry) {
+	protected String getSignedJWT(String key, Object object, String subject, int expiry) {
 		return Jwts.builder()
 				.setPayload(getJwtClaims(key, object, subject, expiry))
 				.signWith(KeyshareConfiguration.getInstance().getJwtAlgorithm(),
@@ -45,7 +49,7 @@ public class BaseVerifier {
 	/**
 	 * Create the body of the JWT authentication token
 	 */
-	public static String getJwtClaims(String key, Object object, String subject, int expiry) {
+	public String getJwtClaims(String key, Object object, String subject, int expiry) {
 		HashMap<String, Object> claims = new HashMap<>(4);
 		claims.put(key, object);
 		claims.put("iat", System.currentTimeMillis()/1000);
@@ -57,11 +61,11 @@ public class BaseVerifier {
 		return GsonUtil.getGson().toJson(claims);
 	}
 
-	private static Claims parseJwt(String jwt) {
+	private Claims parseJwt(String jwt) {
 		Claims claims = null;
 		try {
 			claims = Jwts.parser()
-					.requireSubject(JWT_SUBJECT)
+					.requireSubject(getJWTSubject())
 					.requireIssuer(JWT_ISSUER)
 					.setSigningKey(KeyshareConfiguration.getInstance().getJwtPublicKey())
 					.parseClaimsJws(jwt)
@@ -79,7 +83,7 @@ public class BaseVerifier {
 	 * When doing a preflight = true check, we artificially say that they
 	 * JWT expires earlier.
 	 */
-	protected static boolean isAuthorizedJWT(String jwt, String username, boolean preflight) {
+	protected boolean isAuthorizedJWT(String jwt, String username, boolean preflight) {
 		Claims claims = parseJwt(jwt);
 		if(claims == null) {
 			return false;
@@ -102,11 +106,11 @@ public class BaseVerifier {
 		return user_id.equals(username);
 	}
 
-	public static boolean isAuthorizedJWT(String jwt, String username) {
+	public boolean isAuthorizedJWT(String jwt, String username) {
 		return isAuthorizedJWT(jwt, username, false);
 	}
 
-	public static User authorizeUser(String jwt, String username) {
+	public User authorizeUser(String jwt, String username) {
 		if(!isAuthorizedJWT(jwt, username)) {
 			throw new KeyshareException(KeyshareError.UNAUTHORIZED);
 		}

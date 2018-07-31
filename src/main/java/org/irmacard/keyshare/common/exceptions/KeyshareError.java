@@ -20,6 +20,7 @@ public enum KeyshareError {
 	USER_BLOCKED(403, "User is blocked"),
 	USER_NOT_REGISTERED(403, "User is not yet fully registered"),
 	UNAUTHORIZED(403, "Unauthorized, authenticate to the server first"),
+	NO_RECOVERY(403, "Recovery has not been configured"),
 	USERNAME_UNAVAILABLE(409, "E-mailaddress unavailable"),
 
 	// webclient related exceptions

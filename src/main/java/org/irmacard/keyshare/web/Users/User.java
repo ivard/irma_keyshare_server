@@ -42,6 +42,7 @@ public class User extends Model {
 	public static final String PASSWORD_FIELD = "password";
 	public static final String LAST_SEEN_FIELD = "lastSeen";
 	public static final String PIN_FIELD = "pin";
+	public static final String RECOVERYPIN_FIELD = "recoverypin";
 	public static final String KEYSHARE_FIELD = "keyshare";
 	public static final String PUBLICKEY_FIELD = "publickey";
 	public static final String EMAILISSUED_FIELD = "email_issued";
@@ -58,6 +59,8 @@ public class User extends Model {
 		setString(USERNAME_FIELD, username);
 		setString(PASSWORD_FIELD, password);
 		setString(PIN_FIELD, pin);
+		setString(RECOVERYPIN_FIELD, "");
+
 		setInteger(PINCOUNTER_FIELD, 0);
 		setString(KEYSHARE_FIELD, secret.toString(16));
 
@@ -167,10 +170,31 @@ public class User extends Model {
 		setInteger(PINCOUNTER_FIELD, count);
 	}
 
+	public String getRecoveryPIN() {
+		String pin = getString(RECOVERYPIN_FIELD);
+		if (pin == null || pin.equals("")) {
+			throw new KeyshareException(KeyshareError.NO_RECOVERY);
+		}
+		return pin;
+	}
+
+	public void setRecoveryPIN(String newPin) {
+		setString(RECOVERYPIN_FIELD, newPin);
+		saveIt();
+	}
+
 	public boolean checkAndCountPin(String pin) {
+	    return checkAndCountPin(pin, getPIN());
+    }
+
+    public boolean checkAndCountRecoveryPin(String pin) {
+	    return checkAndCountPin(pin, getRecoveryPIN());
+	}
+
+	public boolean checkAndCountPin(String pin, String toCheck) {
 		int pinCounter = getPinCounter();
 
-		boolean correct = getPIN().equals(pin);
+		boolean correct = toCheck.equals(pin);
 		pinCounter++;
 		setPinCounter(pinCounter);
 
@@ -197,7 +221,13 @@ public class User extends Model {
 	}
 
 	public BigInteger getKeyshare() {
-		return new BigInteger(getString(KEYSHARE_FIELD), 16).subtract(BigInteger.valueOf(42));
+		return new BigInteger(getString(KEYSHARE_FIELD), 16);
+	}
+
+	public void applyDeltaOnKeyshare(BigInteger delta) {
+		BigInteger keyshare = new BigInteger(getString(KEYSHARE_FIELD), 16).subtract(delta);
+		setString(KEYSHARE_FIELD, keyshare);
+		saveIt();
 	}
 
 	public ProofPCommitmentMap generateCommitments(List<PublicKeyIdentifier> pkids) throws InfoException, KeyException {
