@@ -1,8 +1,8 @@
 package org.irmacard.keyshare.web;
 
+import org.irmacard.keyshare.common.ChangePinTokenMessage;
 import org.irmacard.keyshare.common.KeyshareResult;
 import org.irmacard.keyshare.common.PinTokenMessage;
-import org.irmacard.keyshare.common.ChangePinTokenMessage;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.users.LogEntryType;
@@ -11,13 +11,13 @@ import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Context;
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
 
 public class PinResource extends BaseVerifier {
 	private static Logger logger = LoggerFactory.getLogger(PinResource.class);

@@ -2,10 +2,7 @@ package org.irmacard.keyshare.web;
 
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
-import org.irmacard.keyshare.common.IRMAHeaders;
-import org.irmacard.keyshare.common.KeyshareResult;
-import org.irmacard.keyshare.common.PinTokenMessage;
-import org.irmacard.keyshare.common.RecoveryRequest;
+import org.irmacard.keyshare.common.*;
 import org.irmacard.keyshare.common.exceptions.KeyshareError;
 import org.irmacard.keyshare.common.exceptions.KeyshareException;
 import org.irmacard.keyshare.web.users.LogEntryType;
@@ -14,6 +11,7 @@ import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -22,6 +20,7 @@ import java.math.BigInteger;
 
 public class RecoveryManager extends BaseVerifier {
     public static final String JWT_SUBJECT = "recovery_tok";
+    private boolean useDefaultAuth = false; // Change to true if normal PIN should be used instead of recovery PIN
     private static Logger logger = LoggerFactory.getLogger(RecoveryManager.class);
 
     @Context
@@ -29,36 +28,56 @@ public class RecoveryManager extends BaseVerifier {
 
     @Override
     protected String getJWTSubject() {
+        if(useDefaultAuth) {
+            return BaseVerifier.JWT_SUBJECT;
+        }
         return JWT_SUBJECT;
+    }
+
+    @POST
+    @Path("/recovery/setup")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public KeyshareResult setupRecovery (RecoveryPinInit hashedRecoveryPin,
+                                 @HeaderParam(IRMAHeaders.USERNAME) String username,
+                                 @HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
+            throws KeyshareException {
+        logger.info("Setting up recovery for: " + username);
+        useDefaultAuth = true; // Recovery PIN has not been set up yet, use normal PIN
+        User u = authorizeUser(jwt, username);
+        useDefaultAuth = false;
+        u.setRecoveryPIN(hashedRecoveryPin.getHashedPin());
+        return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, "Recovery PIN initialized");
     }
 
     @POST
     @Path("/recovery/new-device")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String initNewDevice(RecoveryRequest rr,
+    public RecoveryServerKeyResponse initNewDevice(RecoveryRequest rr,
                                               @HeaderParam(IRMAHeaders.USERNAME) String username,
                                               @HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
             throws InfoException, KeyException {
 
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
+        //TODO Error handling
         u.applyDeltaOnKeyshare(new BigInteger(rr.getDelta()));
-        return rr.getRedPacket().toString();
+        return new RecoveryServerKeyResponse("".getBytes());
     }
 
     @POST
-    @Path("/recovery/verify-pin")
+    @Path("/recovery/verify-recovery-pin")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public KeyshareResult pin(PinTokenMessage msg) {
+    public KeyshareResult recoveryPin(PinTokenMessage msg) {
         logger.info("Verifying PIN for user {}", msg.getID());
 
         KeyshareResult result;
         User u = Users.getValidUser(msg.getID());
 
         // DEBUG
-        String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
+        String jwt = getSignedJWT("user_id", msg.getID(), getJWTSubject(),
                 KeyshareConfiguration.getInstance().getPinExpiry());
         return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, jwt);
         // END DEBUG
@@ -85,5 +104,16 @@ public class RecoveryManager extends BaseVerifier {
         }
 
         return result;*/
+    }
+
+    @POST
+    @Path("/recovery/verify-pin")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public KeyshareResult pin(PinTokenMessage msg) {
+        useDefaultAuth = true;
+        KeyshareResult result = recoveryPin(msg);
+        useDefaultAuth = false;
+        return result;
     }
 }

@@ -1,7 +1,5 @@
 package org.irmacard.keyshare.common;
 
-import java.math.BigInteger;
-
 public class RecoveryRequest {
     private byte[] redPacket;
     private byte[] delta;
