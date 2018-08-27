@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.print.attribute.standard.Media;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -62,7 +63,8 @@ public class RecoveryManager extends BaseVerifier {
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
         //TODO Error handling
-        u.applyDeltaOnKeyshare(new BigInteger(rr.getDelta()));
+        u.setDeviceKey(new BigInteger(rr.getDelta()));
+        System.out.println("Hallo? " + new BigInteger(rr.getDelta()).toString());
         return new RecoveryServerKeyResponse("".getBytes());
     }
 
@@ -81,6 +83,7 @@ public class RecoveryManager extends BaseVerifier {
                 KeyshareConfiguration.getInstance().getPinExpiry());
         return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, jwt);
         // END DEBUG
+        //TODO: Enable, PIN check does not work
 /*
         if(!u.isEnabled()) {
             u.addLog(LogEntryType.PIN_CHECK_REFUSED);

@@ -44,6 +44,7 @@ public class User extends Model {
 	public static final String PIN_FIELD = "pin";
 	public static final String RECOVERYPIN_FIELD = "recoverypin";
 	public static final String KEYSHARE_FIELD = "keyshare";
+	public static final String DEVICE_KEY_FIELD = "deviceKey";
 	public static final String PUBLICKEY_FIELD = "publickey";
 	public static final String EMAILISSUED_FIELD = "email_issued";
 	public static final String ENROLLED_FIELD = "enrolled";
@@ -52,7 +53,7 @@ public class User extends Model {
 	public static final String PINCOUNTER_FIELD = "pincounter";
 	public static final String PINBLOCK_DATE = "pinblockDate";
 
-	public User(String username, String password, String pin, BigInteger secret, PublicKey publicKey) {
+	public User(String username, String password, String pin, BigInteger secret, BigInteger deviceKey, PublicKey publicKey) {
 		if (!checkInput(pin, publicKey))
 			throw new KeyshareException(KeyshareError.MALFORMED_INPUT);
 
@@ -63,6 +64,7 @@ public class User extends Model {
 
 		setInteger(PINCOUNTER_FIELD, 0);
 		setString(KEYSHARE_FIELD, secret.toString(16));
+		setString(DEVICE_KEY_FIELD, deviceKey.toString(16));
 
 		setString(PUBLICKEY_FIELD, GsonUtil.getGson().toJson(publicKey));
 		this.publicKey = publicKey;
@@ -80,7 +82,7 @@ public class User extends Model {
 	}
 
 	public User(String username, String password, String pin, PublicKey publicKey) {
-		this(username, password, pin, new BigInteger(255, new SecureRandom()), publicKey);
+		this(username, password, pin, new BigInteger(255, new SecureRandom()), BigInteger.ZERO, publicKey);
 	}
 
 	public User(UserLoginMessage user) {
@@ -221,12 +223,13 @@ public class User extends Model {
 	}
 
 	public BigInteger getKeyshare() {
-		return new BigInteger(getString(KEYSHARE_FIELD), 16);
+		BigInteger key = new BigInteger(getString(KEYSHARE_FIELD), 16);
+		BigInteger delta = new BigInteger(getString(DEVICE_KEY_FIELD), 16);
+		return key.subtract(delta);
 	}
 
-	public void applyDeltaOnKeyshare(BigInteger delta) {
-		BigInteger keyshare = new BigInteger(getString(KEYSHARE_FIELD), 16).subtract(delta);
-		setString(KEYSHARE_FIELD, keyshare);
+	public void setDeviceKey(BigInteger delta) {
+		setString(DEVICE_KEY_FIELD, delta);
 		saveIt();
 	}
 

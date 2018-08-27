@@ -2,19 +2,19 @@ package org.irmacard.keyshare.common;
 
 public class RecoveryRequest {
     private byte[] redPacket;
-    private byte[] delta;
+    private String delta;
 
-    public RecoveryRequest(byte[] redPacket, byte[] delta) {
+    public RecoveryRequest(byte[] redPacket, String delta) {
         this.redPacket = redPacket;
         this.delta = delta;
     }
 
-    public byte[] getDelta() {
+    public String getDelta() {
 
         return delta;
     }
 
-    public void setDelta(byte[] delta) {
+    public void setDelta(String delta) {
         this.delta = delta;
     }
 

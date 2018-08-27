@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users
     pinCounter int,
     pinBlockDate long,
     keyshare varchar(256),
+    deviceKey varchar(128),
     publicKey varchar(4096),
     enrolled boolean,
     enabled boolean,
