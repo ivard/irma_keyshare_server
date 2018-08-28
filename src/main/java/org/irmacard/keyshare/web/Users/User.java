@@ -225,11 +225,12 @@ public class User extends Model {
 	public BigInteger getKeyshare() {
 		BigInteger key = new BigInteger(getString(KEYSHARE_FIELD), 16);
 		BigInteger delta = new BigInteger(getString(DEVICE_KEY_FIELD), 16);
+		System.out.println("Key: " + key.toString() + "delta: " + delta.toString());
 		return key.subtract(delta);
 	}
 
 	public void setDeviceKey(BigInteger delta) {
-		setString(DEVICE_KEY_FIELD, delta);
+		setString(DEVICE_KEY_FIELD, delta.toString(16));
 		saveIt();
 	}
 

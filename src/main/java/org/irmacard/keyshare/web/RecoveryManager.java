@@ -64,7 +64,6 @@ public class RecoveryManager extends BaseVerifier {
         User u = authorizeUser(jwt, username);
         //TODO Error handling
         u.setDeviceKey(new BigInteger(rr.getDelta()));
-        System.out.println("Hallo? " + new BigInteger(rr.getDelta()).toString());
         return new RecoveryServerKeyResponse("".getBytes());
     }
 

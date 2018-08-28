@@ -71,7 +71,7 @@ public class BaseVerifier {
 					.parseClaimsJws(jwt)
 					.getBody();
 		} catch (UnsupportedJwtException|MalformedJwtException|SignatureException
-				|ExpiredJwtException|IllegalArgumentException e) {
+				|ExpiredJwtException|IllegalArgumentException|IncorrectClaimException e) {
 			logger.warn("JWT {} didn't verify", jwt);
 			logger.warn(e.getMessage());
 		}
