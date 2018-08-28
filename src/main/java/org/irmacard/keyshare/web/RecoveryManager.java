@@ -72,18 +72,27 @@ public class RecoveryManager extends BaseVerifier {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public KeyshareResult recoveryPin(PinTokenMessage msg) {
-        logger.info("Verifying PIN for user {}", msg.getID());
-
-        KeyshareResult result;
+        logger.info("Verifying Recovery PIN for user {}", msg.getID());
         User u = Users.getValidUser(msg.getID());
+        return checkPin(msg, u.getRecoveryPIN(), u);
+    }
 
-        // DEBUG
-        String jwt = getSignedJWT("user_id", msg.getID(), getJWTSubject(),
-                KeyshareConfiguration.getInstance().getPinExpiry());
-        return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, jwt);
-        // END DEBUG
-        //TODO: Enable, PIN check does not work
-/*
+    @POST
+    @Path("/recovery/verify-pin")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public KeyshareResult pin(PinTokenMessage msg) {
+        logger.info("Verifying PIN for user {}", msg.getID());
+        User u = Users.getValidUser(msg.getID());
+        useDefaultAuth = true;
+        KeyshareResult result = checkPin(msg, u.getPIN(), u);
+        useDefaultAuth = false;
+        return result;
+    }
+
+    private KeyshareResult checkPin(PinTokenMessage msg, String pin, User u) {
+        KeyshareResult result;
+
         if(!u.isEnabled()) {
             u.addLog(LogEntryType.PIN_CHECK_REFUSED);
             result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
@@ -92,7 +101,7 @@ public class RecoveryManager extends BaseVerifier {
         if(!u.isEnrolled())
             throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 
-        if(!u.checkAndCountRecoveryPin(msg.getPin())) {
+        if(!u.checkAndCountPin(msg.getPin(), pin)) {
             if (!u.isPinBlocked()) {
                 result = new KeyshareResult(KeyshareResult.STATUS_FAILURE, "" + u.getPinTriesRemaining());
             } else {
@@ -100,22 +109,11 @@ public class RecoveryManager extends BaseVerifier {
                 result = new KeyshareResult(KeyshareResult.STATUS_ERROR, "" + u.getPinblockRelease());
             }
         } else {
-            String jwt = getSignedJWT("user_id", msg.getID(), JWT_SUBJECT,
+            String jwt = getSignedJWT("user_id", msg.getID(), getJWTSubject(),
                     KeyshareConfiguration.getInstance().getPinExpiry());
             result = new KeyshareResult(KeyshareResult.STATUS_SUCCESS, jwt);
         }
 
-        return result;*/
-    }
-
-    @POST
-    @Path("/recovery/verify-pin")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public KeyshareResult pin(PinTokenMessage msg) {
-        useDefaultAuth = true;
-        KeyshareResult result = recoveryPin(msg);
-        useDefaultAuth = false;
         return result;
     }
 }
