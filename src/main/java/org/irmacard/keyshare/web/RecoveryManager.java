@@ -1,5 +1,8 @@
 package org.irmacard.keyshare.web;
 
+import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
+import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
 import org.irmacard.keyshare.common.*;
@@ -11,13 +14,24 @@ import org.irmacard.keyshare.web.users.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.print.attribute.standard.Media;
-import javax.servlet.ServletOutputStream;
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.io.*;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class RecoveryManager extends BaseVerifier {
     public static final String JWT_SUBJECT = "recovery_tok";
@@ -44,10 +58,12 @@ public class RecoveryManager extends BaseVerifier {
                                  @HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
             throws KeyshareException {
         logger.info("Setting up recovery for: " + username);
+
         useDefaultAuth = true; // Recovery PIN has not been set up yet, use normal PIN
         User u = authorizeUser(jwt, username);
         useDefaultAuth = false;
         u.setRecoveryPIN(hashedRecoveryPin.getHashedPin());
+
         return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, "Recovery PIN initialized");
     }
 
@@ -62,9 +78,18 @@ public class RecoveryManager extends BaseVerifier {
 
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
-        //TODO Error handling
+
         u.setDeviceKey(new BigInteger(rr.getDelta()));
-        return new RecoveryServerKeyResponse("".getBytes());
+        KeyPair pair = loadServerRecoveryPair();
+        byte[] decrypted = null;
+        try {
+            decrypted = decrypt(pair.getPrivate(), rr.getRedPacket());
+            System.out.println(new String(decrypted));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new KeyException("Recovery package could not be decrypted.");
+        }
+        return new RecoveryServerKeyResponse(Hex.encodeHexString(decrypted));
     }
 
     @POST
@@ -115,5 +140,54 @@ public class RecoveryManager extends BaseVerifier {
         }
 
         return result;
+    }
+
+    public static byte[] decrypt(PrivateKey privateKey, byte [] encrypted) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        return cipher.doFinal(encrypted);
+    }
+
+    private static final String KEYSHARE_SERVER_NAME = "pbdf";
+
+    private KeyPair loadServerRecoveryPair() {
+        /*
+        X9ECParameters ecP = CustomNamedCurves.getByName("curve25519");
+        ECParameterSpec ecSpec = EC5Util.convertToSpec(ecP);
+        System.out.println("-------------------------------------------------");
+        System.out.println(ecSpec.getGenerator().getAffineX());
+        System.out.println(ecP.getG());
+        System.out.println(ecP.getBaseEntry().getPoint().getAffineYCoord());
+        KeyPairGenerator g = null;
+        try {
+            g = KeyPairGenerator.getInstance("ECDH", "BC");
+            g.initialize(ecSpec, new SecureRandom());
+        } catch (NoSuchAlgorithmException|NoSuchProviderException|InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return g.generateKeyPair();*/
+
+        try {
+            File privateKeyFile = new File("src/main/resources/irma_configuration/" + KEYSHARE_SERVER_NAME + "/recovery_private_key.der");
+            byte[] keyBytes = new byte[(int) privateKeyFile.length()];
+            FileInputStream fis = new FileInputStream(privateKeyFile);
+            fis.read(keyBytes);
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PrivateKey privKey = keyFactory.generatePrivate(spec);
+
+            File publicKeyFile = new File("src/main/resources/irma_configuration/" + KEYSHARE_SERVER_NAME + "/recovery_public_key.der");
+            keyBytes = new byte[(int) publicKeyFile.length()];
+            fis = new FileInputStream(publicKeyFile);
+            fis.read(keyBytes);
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            PublicKey pubKey = factory.generatePublic(publicKeySpec);
+            return new KeyPair(pubKey, privKey);
+        } catch (IOException|NoSuchAlgorithmException|InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

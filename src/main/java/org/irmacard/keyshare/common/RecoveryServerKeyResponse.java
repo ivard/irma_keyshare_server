@@ -1,17 +1,17 @@
 package org.irmacard.keyshare.common;
 
 public class RecoveryServerKeyResponse {
-    private byte[] serverKey;
+    private String serverKey;
 
-    public RecoveryServerKeyResponse(byte[] serverKey) {
+    public RecoveryServerKeyResponse(String serverKey) {
         this.serverKey = serverKey;
     }
 
-    public byte[] getServerKey() {
+    public String getServerKey() {
         return serverKey;
     }
 
-    public void setServerKey(byte[] serverKey) {
+    public void setServerKey(String serverKey) {
         this.serverKey = serverKey;
     }
 }
