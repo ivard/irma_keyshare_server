@@ -1,8 +1,10 @@
 package org.irmacard.keyshare.web;
 
+import com.google.gson.Gson;
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.asn1.pkcs.RSAPublicKey;
+import org.codehaus.jackson.map.util.JSONPObject;
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
 import org.irmacard.keyshare.common.*;
@@ -81,15 +83,20 @@ public class RecoveryManager extends BaseVerifier {
 
         u.setDeviceKey(new BigInteger(rr.getDelta()));
         KeyPair pair = loadServerRecoveryPair();
-        byte[] decrypted = null;
+        RedPacket rp = null;
         try {
-            decrypted = decrypt(pair.getPrivate(), rr.getRedPacket());
-            System.out.println(new String(decrypted));
+            byte[] decrypted = decrypt(pair.getPrivate(), rr.getRedPacket());
+            Gson g = new Gson();
+            rp = g.fromJson(new String(decrypted), RedPacket.class);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new KeyException("Recovery package could not be decrypted.");
+            throw new KeyshareException(KeyshareError.MALFORMED_INPUT);
         }
-        return new RecoveryServerKeyResponse(Hex.encodeHexString(decrypted));
+        if(! rp.getUsername().equals(username)) {
+            logger.warn(String.format("User %s tried to recover with wrong backup", username));
+            throw new KeyshareException(KeyshareError.PROVIDED_BACKUP_WRONG);
+        }
+        return new RecoveryServerKeyResponse(rp.getServerKey());
     }
 
     @POST

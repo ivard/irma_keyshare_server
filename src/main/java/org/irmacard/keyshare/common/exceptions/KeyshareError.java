@@ -22,6 +22,7 @@ public enum KeyshareError {
 	UNAUTHORIZED(403, "Unauthorized, authenticate to the server first"),
 	NO_RECOVERY(403, "Recovery has not been configured"),
 	USERNAME_UNAVAILABLE(409, "E-mailaddress unavailable"),
+	PROVIDED_BACKUP_WRONG(403, "Provided backup does not correspond to actual user"),
 
 	// webclient related exceptions
 	USER_NOT_FOUND(404, "Cannot find user"),
