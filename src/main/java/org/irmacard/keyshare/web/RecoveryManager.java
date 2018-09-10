@@ -81,7 +81,9 @@ public class RecoveryManager extends BaseVerifier {
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
 
-        u.setDeviceKey(new BigInteger(rr.getDelta()));
+        BigInteger serverDelta = new BigInteger(128, new SecureRandom());
+
+        u.setDeviceKey(new BigInteger(rr.getDelta()).xor(serverDelta));
         KeyPair pair = loadServerRecoveryPair();
         RedPacket rp = null;
         try {
@@ -96,7 +98,7 @@ public class RecoveryManager extends BaseVerifier {
             logger.warn(String.format("User %s tried to recover with wrong backup", username));
             throw new KeyshareException(KeyshareError.PROVIDED_BACKUP_WRONG);
         }
-        return new RecoveryServerKeyResponse(rp.getServerKey());
+        return new RecoveryServerKeyResponse(rp.getServerKey(), serverDelta.toString(10));
     }
 
     @POST
