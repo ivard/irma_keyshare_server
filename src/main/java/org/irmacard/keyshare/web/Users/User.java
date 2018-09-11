@@ -224,7 +224,7 @@ public class User extends Model {
 
 	public BigInteger getKeyshare() {
 		BigInteger key = new BigInteger(getString(KEYSHARE_FIELD), 16);
-		BigInteger delta = new BigInteger(getString(DEVICE_KEY_FIELD), 16);
+		BigInteger delta = getDeviceKey();
 		System.out.println("Key: " + key.toString() + "delta: " + delta.toString());
 		return key.subtract(delta);
 	}
@@ -232,6 +232,10 @@ public class User extends Model {
 	public void setDeviceKey(BigInteger delta) {
 		setString(DEVICE_KEY_FIELD, delta.toString(16));
 		saveIt();
+	}
+
+	public BigInteger getDeviceKey() {
+		return new BigInteger(getString(DEVICE_KEY_FIELD), 16);
 	}
 
 	public ProofPCommitmentMap generateCommitments(List<PublicKeyIdentifier> pkids) throws InfoException, KeyException {

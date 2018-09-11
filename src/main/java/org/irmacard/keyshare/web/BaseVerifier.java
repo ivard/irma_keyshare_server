@@ -124,7 +124,7 @@ public class BaseVerifier {
 			throw new KeyshareException(KeyshareError.USER_BLOCKED, "" + u.getPinblockRelease());
 		}
 
-		if(!u.isEnabled()) {
+		if(!u.isEnrolled()) {
 			throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
 		}
 		return u;

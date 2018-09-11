@@ -2,9 +2,6 @@ package org.irmacard.keyshare.web;
 
 import com.google.gson.Gson;
 import org.apache.commons.codec.binary.Hex;
-import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
-import org.bouncycastle.asn1.pkcs.RSAPublicKey;
-import org.codehaus.jackson.map.util.JSONPObject;
 import org.irmacard.credentials.info.InfoException;
 import org.irmacard.credentials.info.KeyException;
 import org.irmacard.keyshare.common.*;
@@ -17,23 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
-import java.util.Base64;
 
 public class RecoveryManager extends BaseVerifier {
     public static final String JWT_SUBJECT = "recovery_tok";
@@ -69,6 +61,50 @@ public class RecoveryManager extends BaseVerifier {
         return new KeyshareResult(KeyshareResult.STATUS_SUCCESS, "Recovery PIN initialized");
     }
 
+    @GET
+    @Path("/recovery/request-new-device")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RecoveryDeltaCommitment RecoveryRequestNewDevice (@HeaderParam(IRMAHeaders.USERNAME) String username,
+                                     @HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
+        throws InfoException, KeyException {
+        logger.info("Recovery requested for: " + username);
+        User u = authorizeUser(jwt, username);
+
+        u.setEnabled(false);
+
+        BigInteger serverDelta = new BigInteger(128, new SecureRandom());
+        u.setDeviceKey(serverDelta); // User part is added in RecoveryServerKeyResponse
+
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(serverDelta.toString(10).getBytes());
+            return new RecoveryDeltaCommitment(new String(Hex.encodeHexString(encodedhash)));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new InfoException("Hashing is not supported by server");
+        }
+    }
+
+    @Override
+    public User authorizeUser(String jwt, String username) {
+        if(!isAuthorizedJWT(jwt, username)) {
+            throw new KeyshareException(KeyshareError.UNAUTHORIZED);
+        }
+
+        User u = Users.getValidUser(username);
+        if(u == null) {
+            throw new KeyshareException(KeyshareError.USER_NOT_FOUND);
+        }
+
+        // Blocked does not have to be checked during recovery
+
+        if(!u.isEnrolled()) {
+            throw new KeyshareException(KeyshareError.USER_NOT_REGISTERED);
+        }
+        return u;
+    }
+
     @POST
     @Path("/recovery/new-device")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -81,9 +117,8 @@ public class RecoveryManager extends BaseVerifier {
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
 
-        BigInteger serverDelta = new BigInteger(128, new SecureRandom());
+        BigInteger serverDelta = u.getDeviceKey();
 
-        u.setDeviceKey(new BigInteger(rr.getDelta()).xor(serverDelta));
         KeyPair pair = loadServerRecoveryPair();
         RedPacket rp = null;
         try {
@@ -98,6 +133,9 @@ public class RecoveryManager extends BaseVerifier {
             logger.warn(String.format("User %s tried to recover with wrong backup", username));
             throw new KeyshareException(KeyshareError.PROVIDED_BACKUP_WRONG);
         }
+
+        u.setDeviceKey(new BigInteger(rr.getDelta()).xor(serverDelta));
+        u.setEnabled(true);
         return new RecoveryServerKeyResponse(rp.getServerKey(), serverDelta.toString(10));
     }
 
@@ -161,22 +199,6 @@ public class RecoveryManager extends BaseVerifier {
     private static final String KEYSHARE_SERVER_NAME = "pbdf";
 
     private KeyPair loadServerRecoveryPair() {
-        /*
-        X9ECParameters ecP = CustomNamedCurves.getByName("curve25519");
-        ECParameterSpec ecSpec = EC5Util.convertToSpec(ecP);
-        System.out.println("-------------------------------------------------");
-        System.out.println(ecSpec.getGenerator().getAffineX());
-        System.out.println(ecP.getG());
-        System.out.println(ecP.getBaseEntry().getPoint().getAffineYCoord());
-        KeyPairGenerator g = null;
-        try {
-            g = KeyPairGenerator.getInstance("ECDH", "BC");
-            g.initialize(ecSpec, new SecureRandom());
-        } catch (NoSuchAlgorithmException|NoSuchProviderException|InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        }
-        return g.generateKeyPair();*/
-
         try {
             File privateKeyFile = new File("src/main/resources/irma_configuration/" + KEYSHARE_SERVER_NAME + "/recovery_private_key.der");
             byte[] keyBytes = new byte[(int) privateKeyFile.length()];
