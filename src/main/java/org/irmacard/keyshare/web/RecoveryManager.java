@@ -135,6 +135,7 @@ public class RecoveryManager extends BaseVerifier {
         }
 
         u.setDeviceKey(new BigInteger(rr.getDelta()).xor(serverDelta));
+        u.setPIN(rr.getNewHashedPin());
         u.setEnabled(true);
         return new RecoveryServerKeyResponse(rp.getServerKey(), serverDelta.toString(10));
     }
