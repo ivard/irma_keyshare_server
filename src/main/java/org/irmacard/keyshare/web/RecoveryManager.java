@@ -32,6 +32,9 @@ public class RecoveryManager extends BaseVerifier {
     private boolean useDefaultAuth = false; // Change to true if normal PIN should be used instead of recovery PIN
     private static Logger logger = LoggerFactory.getLogger(RecoveryManager.class);
 
+    // Recovery does only work for one fixed scheme!
+    private static final String KEYSHARE_SERVER_NAME = "test";
+
     @Context
     private HttpServletRequest servletRequest;
 
@@ -112,7 +115,7 @@ public class RecoveryManager extends BaseVerifier {
     public RecoveryServerKeyResponse initNewDevice(RecoveryRequest rr,
                                               @HeaderParam(IRMAHeaders.USERNAME) String username,
                                               @HeaderParam(IRMAHeaders.AUTHORIZATION) String jwt)
-            throws InfoException, KeyException {
+            throws KeyshareException {
 
         logger.info("Recovery started for: " + username);
         User u = authorizeUser(jwt, username);
@@ -125,6 +128,8 @@ public class RecoveryManager extends BaseVerifier {
             byte[] decrypted = decrypt(pair.getPrivate(), rr.getRedPacket());
             Gson g = new Gson();
             rp = g.fromJson(new String(decrypted), RedPacket.class);
+        } catch (KeyshareException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             throw new KeyshareException(KeyshareError.MALFORMED_INPUT);
@@ -191,13 +196,15 @@ public class RecoveryManager extends BaseVerifier {
     }
 
     public static byte[] decrypt(PrivateKey privateKey, byte [] encrypted) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        } catch(Exception e) {
+            throw new KeyshareException(KeyshareError.EXCEPTION);
+        }
         return cipher.doFinal(encrypted);
     }
-
-    private static final String KEYSHARE_SERVER_NAME = "pbdf";
 
     private KeyPair loadServerRecoveryPair() {
         try {
@@ -219,7 +226,7 @@ public class RecoveryManager extends BaseVerifier {
             return new KeyPair(pubKey, privKey);
         } catch (IOException|NoSuchAlgorithmException|InvalidKeySpecException e) {
             e.printStackTrace();
+            throw new KeyshareException(KeyshareError.EXCEPTION);
         }
-        return null;
     }
 }
