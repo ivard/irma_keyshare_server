@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -189,14 +190,10 @@ public class User extends Model {
 	    return checkAndCountPin(pin, getPIN());
     }
 
-    public boolean checkAndCountRecoveryPin(String pin) {
-	    return checkAndCountPin(pin, getRecoveryPIN());
-	}
-
 	public boolean checkAndCountPin(String pin, String toCheck) {
 		int pinCounter = getPinCounter();
 
-		boolean correct = toCheck.equals(pin);
+		boolean correct = MessageDigest.isEqual(toCheck.getBytes(), pin.getBytes());
 		pinCounter++;
 		setPinCounter(pinCounter);
 
@@ -225,7 +222,6 @@ public class User extends Model {
 	public BigInteger getKeyshare() {
 		BigInteger key = new BigInteger(getString(KEYSHARE_FIELD), 16);
 		BigInteger delta = getDeviceKey();
-		System.out.println("Key: " + key.toString() + "delta: " + delta.toString());
 		return key.subtract(delta);
 	}
 
